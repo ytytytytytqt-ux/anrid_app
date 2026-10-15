@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>چالش نابغه‌ها | عددهای صحیح و گویا</title>
+<style>
+:root{
+  --bg:#070b18;--cyan:#3ee7ff;--green:#22e58a;--red:#ff3b6b;--gold:#ffd24a;--violet:#a06bff;
+  --txt:#e8f0ff;--muted:#8ea3c9;--line:rgba(120,180,255,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:"Vazirmatn","IRANSans",Tahoma,"Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% -10%,#16265c 0%,#070b18 55%,#03050d 100%);
+  color:var(--txt);user-select:none;position:relative;
+}
+.math{direction:ltr !important;unicode-bidi:isolate !important;display:inline-block}
+.frac-inline{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;line-height:1.02;font-weight:900;color:inherit;margin:0 .18em;font-family:inherit;position:relative;top:-.06em}
+.frac-inline .fnum,.frac-inline .fden{display:block;text-align:center;padding:0 .4em;font-size:.75em;min-width:1.3em;letter-spacing:0;direction:ltr !important;unicode-bidi:isolate !important}
+.frac-inline .fnum{padding-bottom:2px}
+.frac-inline .fden{padding-top:2px;border-top:2px solid currentColor}
+.bg-fx{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;animation:float 18s ease-in-out infinite}
+.orb.o1{width:340px;height:340px;background:#1e4bff;top:-120px;right:-90px}
+.orb.o2{width:280px;height:280px;background:#7a2bff;bottom:-110px;left:-80px;animation-delay:-6s}
+.orb.o3{width:220px;height:220px;background:#00c2a8;top:45%;left:55%;animation-delay:-11s;opacity:.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-40px,30px) scale(1.15)}66%{transform:translate(30px,-25px) scale(.92)}}
+.screen{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+.screen.active{display:flex;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+#gameScreen{padding:0;justify-content:flex-start}
+.game-wrap{width:min(720px,100%);height:100%;display:flex;flex-direction:column;padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:9px;position:relative;z-index:2}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.hud-item{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;padding:9px 15px;font-weight:900;font-size:17px;backdrop-filter:blur(8px)}
+.coins .coin-icon{width:24px;height:24px;display:grid;place-items:center;filter:drop-shadow(0 0 10px rgba(255,210,74,.9)) drop-shadow(0 0 4px rgba(255,160,20,.6));animation:coinSpin 3s linear infinite;transform-style:preserve-3d}
+@keyframes coinSpin{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+.coins .coin-icon svg{display:block;width:100%;height:100%}
+.coins.bump{animation:bump .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+#coinVal{color:var(--gold);font-variant-numeric:tabular-nums}
+.qcount{color:var(--muted);font-size:15px}
+.qcount span:first-child{color:var(--txt);font-size:19px}
+.slash{opacity:.4;margin:0 3px}
+.timer-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7}
+.ring-fg{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round;stroke-dasharray:276.46;stroke-dashoffset:0;transition:stroke .5s ease;filter:drop-shadow(0 0 6px currentColor)}
+.timer-num{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(255,255,255,.35)}
+.timer-num.danger{animation:beat .5s infinite;color:var(--red)}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:10px;padding:2px 2px 4px;scrollbar-width:none}
+.stage::-webkit-scrollbar{display:none}
+.question-box{background:linear-gradient(150deg,rgba(35,55,105,.7),rgba(14,22,45,.85));border:1px solid var(--line);border-radius:20px;padding:16px 18px;box-shadow:0 12px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);animation:slideIn .5s cubic-bezier(.2,.9,.3,1);flex-shrink:0}
+@keyframes slideIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+.q-label{font-size:11px;font-weight:900;color:var(--cyan);letter-spacing:2px;margin-bottom:7px;opacity:.85}
+.q-text{font-size:17px;font-weight:800;line-height:1.85}
+.visual{display:grid;place-items:center;padding:14px 10px;background:rgba(255,255,255,.022);border:1px dashed rgba(120,180,255,.16);border-radius:20px;min-height:150px;animation:slideIn .55s cubic-bezier(.2,.9,.3,1) .05s backwards;flex-shrink:0}
+.visual:empty{display:none}
+.steps{display:flex;flex-direction:column;gap:8px;flex-shrink:0;position:relative}
+.step{background:linear-gradient(90deg,rgba(62,231,255,.13),rgba(62,231,255,.02));border-right:3px solid var(--cyan);border-radius:13px;padding:10px 14px 10px 12px;opacity:0;transform:translateX(34px);animation:stepIn .55s cubic-bezier(.2,.9,.3,1) forwards;box-shadow:0 6px 22px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);position:relative;display:flex;align-items:flex-start;gap:10px}
+.step::before{content:attr(data-num);flex-shrink:0;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#04121a;font-weight:900;font-size:11px;box-shadow:0 0 12px rgba(62,231,255,.5);margin-top:2px}
+@keyframes stepIn{to{opacity:1;transform:translateX(0)}}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:11px;font-weight:900;color:var(--cyan);margin-bottom:4px;letter-spacing:1px}
+.step-text{font-size:14px;line-height:1.75;color:#d3e2ff}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex-shrink:0}
+.opt{position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;padding:15px 14px;border-radius:17px;font-family:inherit;font-size:18px;font-weight:900;color:var(--txt);cursor:pointer;background:linear-gradient(150deg,rgba(44,66,120,.6),rgba(18,27,54,.85));border:1.5px solid rgba(120,180,255,.2);transition:transform .18s,border-color .25s,box-shadow .25s,background .25s;box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);text-align:right}
+.opt:active:not(.done){transform:scale(.95)}
+.opt-key{width:28px;height:28px;flex-shrink:0;display:grid;place-items:center;border-radius:9px;font-size:13px;font-weight:900;background:rgba(255,255,255,.08);color:var(--muted);transition:.25s}
+.opt-txt{display:flex;align-items:center;flex:1;min-height:24px;line-height:1.5;font-size:15px}
+.opt.correct{background:linear-gradient(150deg,rgba(34,229,138,.28),rgba(10,80,55,.6));border-color:var(--green);color:#c9ffe6;box-shadow:0 0 0 2px rgba(34,229,138,.35),0 0 34px rgba(34,229,138,.55);animation:popGreen .6s cubic-bezier(.34,1.56,.64,1)}
+.opt.correct .opt-key{background:var(--green);color:#04241a}
+@keyframes popGreen{0%{transform:scale(1)}35%{transform:scale(1.09)}70%{transform:scale(.98)}100%{transform:scale(1)}}
+.opt.wrong{background:linear-gradient(150deg,rgba(255,59,107,.28),rgba(90,10,35,.6));border-color:var(--red);color:#ffd0dd;box-shadow:0 0 0 2px rgba(255,59,107,.35),0 0 34px rgba(255,59,107,.5);animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+.opt.wrong .opt-key{background:var(--red);color:#3a0014}
+@keyframes shake{10%,90%{transform:translateX(-3px)}20%,80%{transform:translateX(5px)}30%,50%,70%{transform:translateX(-8px)}40%,60%{transform:translateX(8px)}}
+.opt.reveal{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,74,.4),0 0 30px rgba(255,210,74,.55);animation:revealPulse 1s ease-in-out infinite}
+.opt.reveal .opt-key{background:var(--gold);color:#3d2a00}
+@keyframes revealPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.opt.done{pointer-events:none}
+.opt.faded{opacity:.35;filter:grayscale(.7)}
+.float-coin{position:fixed;z-index:9998;pointer-events:none;font-size:30px;font-weight:900;color:var(--gold);text-shadow:0 0 22px rgba(255,210,74,.9);animation:floatUp 1.3s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-90%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-200%) scale(.9)}}
+.particle{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:9997;animation:particleFly .9s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes particleFly{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(0);opacity:0}}
+.ripple{position:fixed;border-radius:50%;pointer-events:none;z-index:9996;border:3px solid var(--green);animation:rippleOut .75s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes rippleOut{0%{width:0;height:0;opacity:.9;transform:translate(-50%,-50%)}100%{width:280px;height:280px;opacity:0;transform:translate(-50%,-50%)}}
+.end-card{width:min(460px,100%);text-align:center;background:linear-gradient(160deg,rgba(28,42,80,.88),rgba(12,18,38,.94));border:1px solid var(--line);border-radius:28px;padding:36px 26px 30px;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.end-emoji{font-size:64px;margin-bottom:8px;animation:pulseLogo 2s infinite}
+.end-title{font-size:22px;font-weight:900;margin-bottom:16px;color:var(--muted)}
+.end-coins{font-size:56px;font-weight:900;color:var(--gold);text-shadow:0 0 36px rgba(255,210,74,.65);font-variant-numeric:tabular-nums;line-height:1.1}
+.end-rank{display:inline-block;margin-top:12px;padding:7px 22px;border-radius:20px;font-size:15px;font-weight:900;background:linear-gradient(135deg,rgba(62,231,255,.18),rgba(160,107,255,.18));border:1px solid rgba(120,180,255,.35);color:var(--cyan)}
+.end-stats{display:flex;gap:10px;margin:22px 0 24px;justify-content:center}
+.stat{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:12px 8px}
+.stat b{display:block;font-size:22px;font-weight:900;color:var(--txt)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.btn-start{width:100%;padding:17px;border:none;border-radius:18px;font-family:inherit;font-size:18px;font-weight:900;color:#04121a;background:linear-gradient(135deg,#3ee7ff,#22e58a);cursor:pointer;position:relative;overflow:hidden;box-shadow:0 10px 34px rgba(62,231,255,.35);transition:transform .15s,box-shadow .2s}
+.btn-start:active{transform:scale(.96)}
+.btn-start::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shine 2.6s infinite}
+@keyframes shine{0%{left:-120%}55%{left:140%}100%{left:140%}}
+@keyframes pulseLogo{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.viz-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.viz-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;border-radius:10px;font-weight:900;font-size:14px;border:1px solid rgba(255,255,255,.1)}
+.eqline{font-size:17px;font-weight:900;direction:ltr !important;unicode-bidi:isolate !important;color:var(--green);text-shadow:0 0 14px rgba(34,229,138,.5);padding:2px 0}
+.note{font-size:12px;color:var(--muted);font-weight:700;text-align:center;line-height:1.7}
+.eqrow{display:inline-flex;align-items:center;gap:8px;direction:ltr !important;unicode-bidi:isolate !important;font-weight:900;flex-wrap:wrap;justify-content:center}
+@media (max-width:400px){
+  .opt{font-size:16px;padding:13px 11px}
+  .opt-txt{font-size:13.5px}
+  .q-text{font-size:15.5px}
+  .timer-wrap{width:70px;height:70px}
+  .timer-num{font-size:21px}
+  .hud-item{padding:8px 12px;font-size:15px}
+  .chip{font-size:12px;padding:5px 9px}
+  .eqline{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div id="gameScreen" class="screen active">
+  <div class="game-wrap">
+    <div class="hud">
+      <div class="hud-item coins" id="coinBox">
+        <span class="coin-icon">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coinFace" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#fff8d0"/><stop offset="35%" stop-color="#ffd94a"/><stop offset="70%" stop-color="#f5a600"/><stop offset="100%" stop-color="#a85f00"/></radialGradient>
+              <radialGradient id="coinInner" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#fff0a8"/><stop offset="60%" stop-color="#ffc21f"/><stop offset="100%" stop-color="#c47a00"/></radialGradient>
+              <linearGradient id="coinEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff3b0"/><stop offset="50%" stop-color="#e8a300"/><stop offset="100%" stop-color="#8a4f00"/></linearGradient>
+            </defs>
+            <circle cx="16" cy="16" r="15" fill="url(#coinEdge)"/>
+            <circle cx="16" cy="16" r="13" fill="url(#coinFace)"/>
+            <circle cx="16" cy="16" r="10" fill="url(#coinInner)" opacity=".95"/>
+            <text x="16" y="20.7" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#fff8c8">$</text>
+          </svg>
+        </span>
+        <span id="coinVal">0</span>
+      </div>
+      <div class="timer-wrap">
+        <svg class="ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="44"></circle><circle class="ring-fg" id="ringFg" cx="50" cy="50" r="44"></circle></svg>
+        <div class="timer-num" id="timerNum">60</div>
+      </div>
+      <div class="hud-item qcount"><span id="qNum">1</span><span class="slash">/</span><span id="qTotal">19</span></div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="question-box">
+        <div class="q-label">سؤال</div>
+        <div class="q-text" id="qText"></div>
+      </div>
+      <div class="visual" id="visual"></div>
+      <div class="steps" id="steps"></div>
+    </div>
+    <div class="options" id="options"></div>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="end-card">
+    <div class="end-emoji" id="endEmoji">🏆</div>
+    <div class="end-title" id="endTitle">پایان بازی</div>
+    <div class="end-coins" id="endCoins">0</div>
+    <div class="end-rank" id="endRank">مبتدی</div>
+    <div class="end-stats">
+      <div class="stat"><b id="stCorrect">0</b><span>پاسخ صحیح</span></div>
+      <div class="stat"><b id="stFast">0</b><span>پاسخ برق‌آسا</span></div>
+      <div class="stat"><b id="stTotal">0</b><span>سؤال</span></div>
+    </div>
+    <button class="btn-start" id="btnRestart">بازگشت به صفحه خانه 🏠</button>
+  </div>
+</div>
+
+<script>
+function toFa(n){ return String(n).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]); }
+
+/* کمکی: ساخت کسر با خط کسری */
+function fr(n, d){
+  return `<span class="frac-inline"><span class="fnum">${n}</span><span class="fden">${d}</span></span>`;
+}
+/* کمکی: عدد مخلوط */
+function mx(w, n, d){
+  return `<span style="display:inline-flex;align-items:center;gap:2px">${w}${fr(n,d)}</span>`;
+}
+/* کمکی: ردیف معادله LTR */
+function eqRow(inner, size){
+  size = size || 22;
+  return `<span class="eqrow" style="font-size:${size}px">${inner}</span>`;
+}
+
+const QUESTIONS = [
+
+/* ---------- Q1-الف : پاسخ در گزینه ۳ ---------- */
+{
+  q: 'حاصل عبارت زیر را با رعایت ترتیب عملیات به دست آورید:<br>' + eqRow('<span>−۳۲ − ۲۱ + ۱۲ + ۳ × ۷</span>'),
+  opts: ['<span class="math">+۲۰</span>','<span class="math">−۱۴</span>','<span class="math">−۲۰</span>','<span class="math">+۱۴</span>'],
+  correct: 2,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'اول ضرب: <span class="math">۳ × ۷ = ۲۱</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'عبارت: <span class="math">−۳۲ − ۲۱ + ۱۲ + ۲۱</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">(−۳۲ − ۲۱) + (۱۲ + ۲۱) = −۵۳ + ۳۳ = −۲۰</span>' },
+  ]
+},
+
+/* ---------- Q1-ب : پاسخ در گزینه ۲ ---------- */
+{
+  q: 'حاصل عبارت زیر را با رعایت ترتیب عملیات به دست آورید:<br>' + eqRow('<span>−۱۶ ÷ ۲ × ۳ − ۴</span>'),
+  opts: ['<span class="math">+۲۸</span>','<span class="math">−۲۸</span>','<span class="math">−۲۰</span>','<span class="math">+۲۰</span>'],
+  correct: 1,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'ضرب و تقسیم از چپ به راست: <span class="math">−۱۶ ÷ ۲ = −۸</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">−۸ × ۳ = −۲۴</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">−۲۴ − ۴ = −۲۸</span>' },
+  ]
+},
+
+/* ---------- Q1-ج : پاسخ در گزینه ۴ ---------- */
+{
+  q: 'حاصل عبارت زیر را به دست آورید:<br>' + eqRow('<span>−(−۱۷) + ۱۴ − ۱۳ − ۱۹</span>'),
+  opts: ['<span class="math">+۱</span>','<span class="math">−۳</span>','<span class="math">+۳</span>','<span class="math">−۱</span>'],
+  correct: 3,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'منفی در منفی = مثبت: <span class="math">−(−۱۷) = +۱۷</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">۱۷ + ۱۴ = ۳۱</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">۳۱ − ۱۳ − ۱۹ = ۳۱ − ۳۲ = −۱</span>' },
+  ]
+},
+
+/* ---------- Q2-الف : پاسخ در گزینه ۱ ---------- */
+{
+  q: 'کسر زیر را تا حد امکان ساده کنید:<br>' + eqRow(fr('−۱۰۸','۶'), 26),
+  opts: ['<span class="math">−۱۸</span>','<span class="math">−۱۶</span>','<span class="math">−۱۲</span>','<span class="math">−۲۴</span>'],
+  correct: 0,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'۱۰۸ ÷ ۶ = <span class="math">۱۸</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'علامت منفی حفظ می‌شود' },
+    { at:48, cls:'', title:'گام ۳', text:'نتیجه: <span class="math">−۱۸</span>' },
+  ]
+},
+
+/* ---------- Q2-ب : پاسخ در گزینه ۳ ---------- */
+{
+  q: 'کسر زیر را تا حد امکان ساده کنید:<br>' + eqRow(fr('۶۶','۴۲'), 26),
+  opts: [eqRow(fr('۶','۴'), 22), eqRow(fr('۳۳','۲۱'), 22), eqRow(fr('۱۱','۷'), 22), eqRow(fr('۷','۱۱'), 22)],
+  correct: 2,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'ب.م.م ۶۶ و ۴۲ برابر <span class="math">۶</span> است' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">۶۶ ÷ ۶ = ۱۱</span> و <span class="math">۴۲ ÷ ۶ = ۷</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'نتیجه: <span class="math">۱۱/۷</span>' },
+  ]
+},
+
+/* ---------- Q2-ج : پاسخ در گزینه ۲ ---------- */
+{
+  q: 'کسر زیر را تا حد امکان ساده کنید:<br>' + eqRow(fr('−۹۰','۱۲۶'), 26),
+  opts: [eqRow(fr('−۹','۱۲'), 22), eqRow(fr('−۵','۷'), 22), eqRow(fr('−۳','۴'), 22), eqRow(fr('−۱۵','۲۱'), 22)],
+  correct: 1,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'تجزیه: <span class="math">۹۰ = ۲×۳²×۵</span> و <span class="math">۱۲۶ = ۲×۳²×۷</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'ب.م.م = <span class="math">۲×۳² = ۱۸</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'نتیجه: <span class="math">−۵/۷</span>' },
+  ]
+},
+
+/* ---------- Q3-الف : پاسخ در گزینه ۴ ---------- */
+{
+  q: 'مقدار x را طوری پیدا کنید که دو کسر زیر مساوی باشند:<br>' + eqRow(fr('−۳','۷') + '<span>=</span>' + `<span style="color:#ffd24a">${fr('−۱۲','x')}</span>`, 24),
+  opts: ['<span class="math">x = ۲۱</span>','<span class="math">x = ۳۵</span>','<span class="math">x = ۱۴</span>','<span class="math">x = ۲۸</span>'],
+  correct: 3,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'<span class="math">−۳ → −۱۲</span> یعنی ضرب در ۴' },
+    { at:44, cls:'', title:'گام ۲', text:'مخرج هم باید در ۴ ضرب شود: <span class="math">۷ × ۴ = ۲۸</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">x = ۲۸</span>' },
+  ]
+},
+
+/* ---------- Q3-ب : پاسخ در گزینه ۱ ---------- */
+{
+  q: 'مقدار x را طوری پیدا کنید که دو کسر زیر مساوی باشند:<br>' + eqRow(fr('−۴','۶') + '<span>=</span>' + `<span style="color:#ffd24a">${fr('x','۱۵')}</span>`, 24),
+  opts: ['<span class="math">x = −۱۰</span>','<span class="math">x = +۱۰</span>','<span class="math">x = −۵</span>','<span class="math">x = +۵</span>'],
+  correct: 0,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'<span class="math">۶ → ۱۵</span> یعنی ضرب در <span class="math">۲٫۵</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'صورت هم باید در <span class="math">۲٫۵</span> ضرب شود' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">x = −۴ × ۲٫۵ = −۱۰</span>' },
+  ]
+},
+
+/* ---------- Q4 : پاسخ در گزینه ۲ ---------- */
+{
+  q: 'اعداد زیر را از <b>کوچک به بزرگ</b> مرتب کنید:<br>' +
+     `<span class="eqrow" style="font-size:15px;margin-top:8px">${fr('−۳','۷')}<span>،</span>${fr('۳','۵')}<span>،</span>${fr('−۱','۱۰')}<span>،</span><span>۰</span><span>،</span>${mx('۲','۱','۲')}<span>،</span>${fr('−۳','۲')}</span>`,
+  opts: [
+    `<span class="eqrow" style="font-size:13px">${fr('−۱','۱۰')}<span>،</span>${fr('−۳','۷')}<span>،</span>${fr('−۳','۲')}<span>،</span><span>۰</span><span>،</span>${fr('۳','۵')}<span>،</span>${mx('۲','۱','۲')}</span>`,
+    `<span class="eqrow" style="font-size:13px">${fr('−۳','۲')}<span>،</span>${fr('−۳','۷')}<span>،</span>${fr('−۱','۱۰')}<span>،</span><span>۰</span><span>،</span>${fr('۳','۵')}<span>،</span>${mx('۲','۱','۲')}</span>`,
+    `<span class="eqrow" style="font-size:13px"><span>۰</span><span>،</span>${fr('−۱','۱۰')}<span>،</span>${fr('−۳','۷')}<span>،</span>${fr('−۳','۲')}<span>،</span>${fr('۳','۵')}<span>،</span>${mx('۲','۱','۲')}</span>`,
+    `<span class="eqrow" style="font-size:13px">${mx('۲','۱','۲')}<span>،</span>${fr('۳','۵')}<span>،</span><span>۰</span><span>،</span>${fr('−۱','۱۰')}<span>،</span>${fr('−۳','۷')}<span>،</span>${fr('−۳','۲')}</span>`
+  ],
+  correct: 1,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'اعداد منفی همیشه کوچک‌تر از مثبت‌ها هستند' },
+    { at:44, cls:'', title:'گام ۲', text:'بین منفی‌ها هرچه قدرمطلق بزرگ‌تر، عدد کوچک‌تر: <span class="math">−۳/۲ < −۳/۷ < −۱/۱۰</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'ترتیب کامل: <span class="math">−۳/۲ ، −۳/۷ ، −۱/۱۰ ، ۰ ، ۳/۵ ، ۲ و ۱/۲</span>' },
+  ]
+},
+
+/* ---------- Q5-الف : پاسخ در گزینه ۳ ---------- */
+{
+  q: 'حاصل عبارت زیر را به دست آورید:<br>' + eqRow(fr('−۳','۴') + '<span>+</span>' + fr('۵','۸'), 24),
+  opts: [eqRow(fr('+۱','۸'), 22), eqRow(fr('−۲','۸'), 22), eqRow(fr('−۱','۸'), 22), eqRow(fr('+۲','۸'), 22)],
+  correct: 2,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'مخرج مشترک = <span class="math">۸</span> ← <span class="math">−۳/۴ = −۶/۸</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">−۶/۸ + ۵/۸</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'حاصل: <span class="math">−۱/۸</span>' },
+  ]
+},
+
+/* ---------- Q5-ب : پاسخ در گزینه ۱ ---------- */
+{
+  q: 'حاصل عبارت زیر را به دست آورید:<br>' + eqRow(fr('−۲','۳') + '<span>−</span>' + fr('۵','۱۲'), 24),
+  opts: [eqRow(fr('−۱۳','۱۲'), 22), eqRow(fr('−۷','۱۲'), 22), eqRow(fr('−۳','۱۲'), 22), eqRow(fr('+۱۳','۱۲'), 22)],
+  correct: 0,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'مخرج مشترک = <span class="math">۱۲</span> ← <span class="math">−۲/۳ = −۸/۱۲</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">−۸/۱۲ − ۵/۱۲</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'حاصل: <span class="math">−۱۳/۱۲</span>' },
+  ]
+},
+
+/* ---------- Q5-ج : پاسخ در گزینه ۴ ---------- */
+{
+  q: 'حاصل عبارت زیر را به دست آورید:<br>' + eqRow(mx('−۲','۱','۲') + '<span>+</span>' + mx('۳','۱','۳'), 22),
+  opts: [eqRow(fr('−۵','۶'), 22), eqRow(fr('+۱','۶'), 22), eqRow(fr('−۱','۶'), 22), eqRow(fr('+۵','۶'), 22)],
+  correct: 3,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'<span class="math">−۲ و ۱/۲ = −۵/۲</span> و <span class="math">۳ و ۱/۳ = ۱۰/۳</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'مخرج مشترک ۶: <span class="math">−۱۵/۶ + ۲۰/۶</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">+۵/۶</span>' },
+  ]
+},
+
+/* ---------- Q6-الف : پاسخ در گزینه ۲ ---------- */
+{
+  q: 'حاصل ضرب زیر را به دست آورید و در صورت امکان ساده کنید:<br>' + eqRow('<span>(</span>' + fr('−۳','۴') + '<span>)</span><span>×</span><span>(</span>' + fr('−۸','۱۵') + '<span>)</span>', 24),
+  opts: [eqRow(fr('−۲','۵'), 22), eqRow(fr('۲','۵'), 22), eqRow(fr('۳','۵'), 22), eqRow(fr('۵','۲'), 22)],
+  correct: 1,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'منفی × منفی = مثبت' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">(−۳)×(−۸) = ۲۴</span> و <span class="math">۴×۱۵ = ۶۰</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'ساده: <span class="math">۲۴/۶۰ = ۲/۵</span>' },
+  ]
+},
+
+/* ---------- Q6-ب : پاسخ در گزینه ۴ ---------- */
+{
+  q: 'حاصل ضرب زیر را به دست آورید و در صورت امکان ساده کنید:<br>' + eqRow('<span>(</span>' + fr('−۲','۳') + '<span>)</span><span>×</span><span>(</span>' + fr('+۵','۱۲') + '<span>)</span>', 24),
+  opts: [eqRow(fr('+۵','۱۸'), 22), eqRow(fr('−۱۰','۳۶'), 22), eqRow(fr('−۵','۱۲'), 22), eqRow(fr('−۵','۱۸'), 22)],
+  correct: 3,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'منفی × مثبت = منفی' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">(−۲ × ۵)/(۳ × ۱۲) = −۱۰/۳۶</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'ساده: <span class="math">−۱۰/۳۶ = −۵/۱۸</span>' },
+  ]
+},
+
+/* ---------- Q6-ج : پاسخ در گزینه ۱ ---------- */
+{
+  q: 'حاصل ضرب زیر را به دست آورید:<br>' + eqRow('<span>−۴</span><span>×</span><span>(</span>' + fr('+۲','۳') + '<span>)</span>', 24),
+  opts: [eqRow(fr('−۸','۳'), 22), eqRow(fr('+۸','۳'), 22), eqRow(fr('−۶','۳'), 22), eqRow(fr('−۸','۱۲'), 22)],
+  correct: 0,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'عدد صحیح را در صورت کسر ضرب می‌کنیم: <span class="math">−۴ × ۲ = −۸</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'مخرج ثابت می‌ماند: <span class="math">۳</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'نتیجه: <span class="math">−۸/۳</span>' },
+  ]
+},
+
+/* ---------- Q7-الف : پاسخ در گزینه ۳ ---------- */
+{
+  q: 'حاصل تقسیم زیر را به دست آورید:<br>' + eqRow('<span>(</span>' + fr('−۴','۷') + '<span>)</span><span>÷</span><span>(</span>' + fr('−۵','۷') + '<span>)</span>', 24),
+  opts: [eqRow(fr('−۴','۵'), 22), eqRow(fr('۵','۴'), 22), eqRow(fr('۴','۵'), 22), eqRow(fr('−۵','۴'), 22)],
+  correct: 2,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'منفی ÷ منفی = مثبت' },
+    { at:44, cls:'', title:'گام ۲', text:'معکوس: <span class="math">(−۴/۷) × (−۷/۵)</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">۲۸/۳۵ = ۴/۵</span>' },
+  ]
+},
+
+/* ---------- Q7-ب : پاسخ در گزینه ۴ ---------- */
+{
+  q: 'حاصل تقسیم زیر را به دست آورید:<br>' + eqRow('<span>(</span>' + fr('−۸','۹') + '<span>)</span><span>÷</span><span>(</span><span>−۸</span><span>)</span>', 24),
+  opts: [eqRow(fr('−۱','۹'), 22), eqRow(fr('۹','۱'), 22), eqRow(fr('۱','۸'), 22), eqRow(fr('۱','۹'), 22)],
+  correct: 3,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'منفی ÷ منفی = مثبت' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">(−۸/۹) × (−۱/۸) = ۸/۷۲</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">۸/۷۲ = ۱/۹</span>' },
+  ]
+},
+
+/* ---------- Q7-ج : پاسخ در گزینه ۲ ---------- */
+{
+  q: 'معکوس عدد زیر را پیدا کنید:<br>' + eqRow(mx('−۲','۱','۳'), 22),
+  opts: [eqRow(fr('+۳','۷'), 22), eqRow(fr('−۳','۷'), 22), eqRow(fr('−۷','۳'), 22), eqRow(fr('−۱','۳'), 22)],
+  correct: 1,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'عدد مخلوط به کسر: <span class="math">−۲ و ۱/۳ = −۷/۳</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'معکوس = جای صورت و مخرج عوض شود' },
+    { at:48, cls:'', title:'گام ۳', text:'معکوس: <span class="math">−۳/۷</span>' },
+  ]
+},
+
+/* ---------- Q8 : پاسخ در گزینه ۱ ---------- */
+{
+  q: 'حاصل عبارت زیر را با رعایت ترتیب عملیات به دست آورید:<br>' +
+     eqRow(fr('−۳','۴') + '<span>+</span>' + fr('۲','۳') + '<span>÷</span><span>(</span>' + fr('−۴','۹') + '<span>)</span><span>×</span>' + fr('۳','۵'), 22),
+  opts: [eqRow(fr('−۳۳','۲۰'), 22), eqRow(fr('+۳۳','۲۰'), 22), eqRow(fr('−۹','۱۰'), 22), eqRow(fr('+۹','۱۰'), 22)],
+  correct: 0,
+  visual: '',
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'تقسیم: <span class="math">۲/۳ ÷ (−۴/۹) = ۲/۳ × (−۹/۴) = −۳/۲</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'ضرب: <span class="math">−۳/۲ × ۳/۵ = −۹/۱۰</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'جمع: <span class="math">−۳/۴ + (−۹/۱۰) = −۱۵/۲۰ − ۱۸/۲۰ = −۳۳/۲۰</span>' },
+  ]
+},
+];
+
+const TOTAL_TIME = 60;
+const CIRC = 2 * Math.PI * 44;
+
+const state = {
+  qi: 0, coins: 0, t: 0, running: false, answered: false,
+  rafId: null, lastTs: 0, shown: [], revealed: false, zone: '',
+  correctCount: 0, fastCount: 0, locked: false,
+};
+
+const $ = id => document.getElementById(id);
+const gameScreen  = $('gameScreen');
+const endScreen   = $('endScreen');
+const qText       = $('qText');
+const visualEl    = $('visual');
+const stepsEl     = $('steps');
+const optionsEl   = $('options');
+const stageEl     = $('stage');
+const timerNum    = $('timerNum');
+const ringFg      = $('ringFg');
+const coinVal     = $('coinVal');
+const coinBox     = $('coinBox');
+const qNumEl      = $('qNum');
+
+$('qTotal').textContent = toFa(QUESTIONS.length);
+qNumEl.textContent = '۱';
+
+let AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, dur, type='sine', vol=0.07, delay=0){
+  const c = ac(); if(!c) return;
+  const t = c.currentTime + delay;
+  const o = c.createOscillator(); const g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const SFX = {
+  correct(){ tone(660,.14,'sine',.08,0); tone(880,.14,'sine',.08,.09); tone(1320,.30,'sine',.09,.19); tone(1760,.35,'triangle',.05,.28); },
+  wrong(){ tone(200,.20,'sawtooth',.06,0); tone(150,.36,'sawtooth',.06,.13); },
+  coin(){ tone(1180,.07,'square',.05,0); tone(1560,.11,'square',.05,.06); },
+  tick(){ tone(1000,.035,'square',.028,0); },
+  step(){ tone(720,.09,'sine',.045,0); tone(1080,.12,'sine',.035,.07); },
+  reveal(){ tone(500,.18,'triangle',.05,0); tone(400,.3,'triangle',.045,.14); },
+  start(){ [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.08)); },
+  end(){ [784,988,1175,1568].forEach((f,i)=>tone(f,.3,'sine',.075,i*.14)); }
+};
+
+function burst(x, y, colors){
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    p.style.background = colors[i % colors.length];
+    p.style.boxShadow = '0 0 12px ' + colors[i % colors.length];
+    const a = Math.random() * Math.PI * 2; const d = 60 + Math.random() * 130;
+    p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+    p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.appendChild(p); setTimeout(() => p.remove(), 950);
+  }
+}
+function ripple(x, y, color){
+  const r = document.createElement('div');
+  r.className = 'ripple'; r.style.left = x + 'px'; r.style.top = y + 'px';
+  r.style.borderColor = color; document.body.appendChild(r); setTimeout(() => r.remove(), 800);
+}
+function floatText(x, y, txt, color){
+  const el = document.createElement('div');
+  el.className = 'float-coin'; el.textContent = txt;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.color = color; el.style.textShadow = '0 0 24px ' + color;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1350);
+}
+
+/* دکمهٔ پایان بازی — طبق درخواست، کلیک روی آن هیچ اتفاقی نمی‌اندازد. */
+
+function resetGame(){
+  state.qi = 0; state.coins = 0; state.correctCount = 0;
+  state.fastCount = 0; state.locked = false;
+  coinVal.textContent = '۰'; loadQuestion();
+}
+
+function loadQuestion(){
+  const q = QUESTIONS[state.qi];
+  state.t = 0; state.answered = false; state.revealed = false;
+  state.shown = []; state.zone = ''; state.lastTs = 0;
+  state.lastTick = null; state.running = true;
+
+  qNumEl.textContent = toFa(state.qi + 1);
+  qText.innerHTML = q.q; stepsEl.innerHTML = '';
+  visualEl.innerHTML = q.visual;
+  visualEl.style.animation = 'none';
+  void visualEl.offsetWidth;
+  visualEl.style.animation = '';
+
+  optionsEl.innerHTML = q.opts.map((o, i) =>
+    `<button class="opt" data-i="${i}">
+       <span class="opt-key">${['الف','ب','ج','د'][i]}</span>
+       <span class="opt-txt">${o}</span>
+     </button>`
+  ).join('');
+
+  optionsEl.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => choose(+btn.dataset.i, btn));
+  });
+
+  stageEl.scrollTop = 0;
+  updateZone('z1'); render();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function loop(ts){
+  if(!state.running) return;
+  if(!state.lastTs) state.lastTs = ts;
+  let dt = (ts - state.lastTs) / 1000;
+  state.lastTs = ts; if(dt > 0.25) dt = 0.25;
+  state.t += dt;
+  if(state.t >= TOTAL_TIME){ state.t = TOTAL_TIME; render(); timeUp(); return; }
+  render(); checkSteps();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function render(){
+  const t = state.t; const remain = Math.ceil(TOTAL_TIME - t);
+  timerNum.textContent = toFa(remain);
+  ringFg.style.strokeDashoffset = CIRC * (t / TOTAL_TIME);
+  let zone;
+  if(t < 10) zone = 'z1'; else if(t < 50) zone = 'z2'; else zone = 'z3';
+  if(zone !== state.zone) updateZone(zone);
+  if(zone === 'z3' && remain <= 10 && remain !== state.lastTick && remain > 0){
+    state.lastTick = remain; SFX.tick();
+  }
+}
+function updateZone(z){
+  state.zone = z;
+  const colors = { z1:'#22e58a', z2:'#3ee7ff', z3:'#ff3b6b' };
+  ringFg.style.stroke = colors[z];
+  timerNum.classList.toggle('danger', z === 'z3');
+}
+function checkSteps(){
+  const q = QUESTIONS[state.qi];
+  q.steps.forEach((s, i) => {
+    if(!state.shown[i] && state.t >= s.at){ state.shown[i] = true; addStep(s, i); }
+  });
+  if(!state.revealed && state.t >= 52){ state.revealed = true; revealAnswer(); }
+}
+function addStep(s, idx){
+  const el = document.createElement('div');
+  el.className = 'step'; el.dataset.num = toFa(idx + 1);
+  el.innerHTML = `<div class="step-body"><div class="step-title">${s.title}</div><div class="step-text">${s.text}</div></div>`;
+  stepsEl.appendChild(el); SFX.step();
+  setTimeout(() => { stageEl.scrollTo({ top: stageEl.scrollHeight, behavior: 'smooth' }); }, 80);
+}
+function revealAnswer(){
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach((o, i) => { if(i === q.correct) o.classList.add('reveal'); else o.classList.add('faded'); });
+  SFX.reveal();
+}
+function choose(idx, btn){
+  if(state.answered || state.locked) return;
+  state.answered = true; state.running = false;
+  cancelAnimationFrame(state.rafId);
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  const isCorrect = idx === q.correct;
+  opts.forEach(o => o.classList.add('done'));
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  if(isCorrect){
+    btn.classList.add('correct'); state.correctCount++;
+    let gain = 0;
+    if(state.t < 10) gain = 20; else if(state.t < 50) gain = 10; else gain = 0;
+    if(gain > 0){
+      if(gain === 20) state.fastCount++;
+      state.coins += gain; coinVal.textContent = toFa(state.coins);
+      coinBox.classList.remove('bump'); void coinBox.offsetWidth;
+      coinBox.classList.add('bump'); SFX.coin();
+      setTimeout(() => SFX.coin(), 130);
+      floatText(cx, cy, '+' + toFa(gain), '#ffd24a');
+    } else { floatText(cx, cy, '+۰', '#ff3b6b'); }
+    SFX.correct(); burst(cx, cy, ['#22e58a','#3ee7ff','#ffd24a','#a06bff']);
+    ripple(cx, cy, '#22e58a'); fastForwardSteps();
+  } else {
+    btn.classList.add('wrong'); SFX.wrong();
+    burst(cx, cy, ['#ff3b6b','#ff7a9c','#ffd24a']);
+    ripple(cx, cy, '#ff3b6b');
+    opts[q.correct].classList.add('correct'); fastForwardSteps();
+  }
+  setTimeout(nextQuestion, isCorrect ? 1900 : 2400);
+}
+function fastForwardSteps(){
+  const q = QUESTIONS[state.qi];
+  const pending = q.steps.filter((s, i) => !state.shown[i]);
+  pending.forEach((s, k) => {
+    const idx = q.steps.indexOf(s); state.shown[idx] = true;
+    setTimeout(() => addStep(s, idx), 320 + k * 480);
+  });
+}
+function timeUp(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  if(state.answered) return; state.answered = true;
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach(o => o.classList.add('done'));
+  opts[q.correct].classList.add('correct');
+  opts.forEach((o, i) => { if(i !== q.correct) o.classList.add('faded'); });
+  SFX.wrong();
+  const r = opts[q.correct].getBoundingClientRect();
+  burst(r.left + r.width/2, r.top + r.height/2, ['#ffd24a','#ff3b6b','#3ee7ff']);
+  fastForwardSteps(); setTimeout(nextQuestion, 2200);
+}
+function nextQuestion(){
+  state.qi++;
+  if(state.qi >= QUESTIONS.length){ endGame(); return; }
+  loadQuestion();
+}
+let coinsSentToFlutter = false;
+function sendCoinsToFlutter(){
+  if(coinsSentToFlutter) return;
+  coinsSentToFlutter = true;
+  const finalCoins = (typeof state !== 'undefined' && state.coins) ? state.coins : 0;
+  if(typeof CoinChannel !== 'undefined'){
+    CoinChannel.postMessage(String(finalCoins));
+  } else if(window.CoinChannel){
+    window.CoinChannel.postMessage(String(finalCoins));
+  }
+}
+function returnToHomeScreen(){
+  sendCoinsToFlutter();
+  if(typeof HomeChannel !== 'undefined'){
+    HomeChannel.postMessage('goHome');
+  } else if(window.HomeChannel){
+    window.HomeChannel.postMessage('goHome');
+  }
+}
+
+function endGame(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  gameScreen.classList.remove('active'); endScreen.classList.add('active');
+  SFX.end();
+  $('endCoins').textContent = toFa(state.coins);
+  sendCoinsToFlutter();
+  $('stCorrect').textContent = toFa(state.correctCount) + ' / ' + toFa(QUESTIONS.length);
+  $('stFast').textContent = toFa(state.fastCount);
+  $('stTotal').textContent = toFa(QUESTIONS.length);
+  let rank, emoji, color;
+  if(state.coins >= 330){ rank = 'افسانه‌ی ریاضی'; emoji = '👑'; color = '#ffd24a'; }
+  else if(state.coins >= 240){ rank = 'نابغه'; emoji = '🧠'; color = '#3ee7ff'; }
+  else if(state.coins >= 150){ rank = 'حرفه‌ای'; emoji = '🏆'; color = '#22e58a'; }
+  else if(state.coins >= 70){ rank = 'خوب'; emoji = '⭐'; color = '#a06bff'; }
+  else { rank = 'تازه‌کار'; emoji = '🌱'; color = '#8ea3c9'; }
+  $('endEmoji').textContent = emoji; $('endRank').textContent = rank;
+  $('endRank').style.color = color; $('endCoins').style.color = color;
+  $('endCoins').style.textShadow = '0 0 36px ' + color + 'aa';
+  let n = 0;
+  const iv = setInterval(() => {
+    burst(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.6,
+      ['#ffd24a','#3ee7ff','#22e58a','#a06bff','#ff3b6b']);
+    if(++n > 5) clearInterval(iv);
+  }, 220);
+}
+
+document.addEventListener('keydown', e => {
+  if(!gameScreen.classList.contains('active')) return;
+  const map = { '1':0, '2':1, '3':2, '4':3, '۱':0, '۲':1, '۳':2, '۴':3 };
+  if(e.key in map){
+    const btn = optionsEl.querySelectorAll('.opt')[map[e.key]];
+    if(btn && !state.answered) btn.click();
+  }
+});
+
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if(now - lastTouch < 300) e.preventDefault();
+  lastTouch = now;
+}, { passive:false });
+
+document.addEventListener('touchstart', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+document.addEventListener('click', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+
+window.addEventListener('load', () => {
+  resetGame();
+  const btn = document.getElementById('btnRestart') || document.getElementById('btnHome');
+  if(btn){
+    btn.addEventListener('click', returnToHomeScreen);
+  }
+});
+</script>
+</body>
+</html>

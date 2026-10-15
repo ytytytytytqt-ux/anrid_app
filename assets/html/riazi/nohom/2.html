@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>چالش نابغه‌ها | عددهای حقیقی</title>
+<style>
+:root{
+  --bg:#070b18;--cyan:#3ee7ff;--green:#22e58a;--red:#ff3b6b;--gold:#ffd24a;--violet:#a06bff;
+  --txt:#e8f0ff;--muted:#8ea3c9;--line:rgba(120,180,255,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Vazirmatn","IRANSans",Tahoma,"Segoe UI",system-ui,sans-serif;background:radial-gradient(circle at 25% -10%,#16265c 0%,#070b18 55%,#03050d 100%);color:var(--txt);user-select:none;position:relative}
+.math{direction:ltr !important;unicode-bidi:isolate !important;display:inline-block}
+.frac-inline{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;line-height:1.15;font-weight:900;color:inherit;margin:0 .3em;font-family:inherit;position:relative;top:-.06em}
+.frac-inline .fnum,.frac-inline .fden{display:block;text-align:center;padding:0 .5em;font-size:.78em;direction:ltr !important;unicode-bidi:isolate !important}
+.frac-inline .fnum{padding-bottom:2px}
+.frac-inline .fden{padding-top:2px;border-top:2px solid currentColor}
+.c-cyan{color:#3ee7ff;text-shadow:0 0 10px rgba(62,231,255,.45)}
+.c-green{color:#22e58a;text-shadow:0 0 10px rgba(34,229,138,.45)}
+.c-gold{color:#ffd24a;text-shadow:0 0 10px rgba(255,210,74,.45)}
+.c-violet{color:#a06bff;text-shadow:0 0 10px rgba(160,107,255,.45)}
+.c-pink{color:#ff3b6b;text-shadow:0 0 10px rgba(255,59,107,.45)}
+.c-w{color:#e8f0ff}
+.c-m{color:#8ea3c9}
+.bg-fx{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;animation:float 18s ease-in-out infinite}
+.orb.o1{width:340px;height:340px;background:#1e4bff;top:-120px;right:-90px}
+.orb.o2{width:280px;height:280px;background:#7a2bff;bottom:-110px;left:-80px;animation-delay:-6s}
+.orb.o3{width:220px;height:220px;background:#00c2a8;top:45%;left:55%;animation-delay:-11s;opacity:.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-40px,30px) scale(1.15)}66%{transform:translate(30px,-25px) scale(.92)}}
+.screen{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+.screen.active{display:flex;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+#gameScreen{padding:0;justify-content:flex-start}
+.game-wrap{width:min(720px,100%);height:100%;display:flex;flex-direction:column;padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:9px;position:relative;z-index:2}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.hud-item{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;padding:9px 15px;font-weight:900;font-size:17px;backdrop-filter:blur(8px)}
+.coins .coin-icon{width:24px;height:24px;display:grid;place-items:center;filter:drop-shadow(0 0 10px rgba(255,210,74,.9)) drop-shadow(0 0 4px rgba(255,160,20,.6));animation:coinSpin 3s linear infinite;transform-style:preserve-3d}
+@keyframes coinSpin{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+.coins .coin-icon svg{display:block;width:100%;height:100%}
+.coins.bump{animation:bump .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+#coinVal{color:var(--gold);font-variant-numeric:tabular-nums}
+.qcount{color:var(--muted);font-size:15px}
+.qcount span:first-child{color:var(--txt);font-size:19px}
+.slash{opacity:.4;margin:0 3px}
+.timer-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7}
+.ring-fg{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round;stroke-dasharray:276.46;stroke-dashoffset:0;transition:stroke .5s ease;filter:drop-shadow(0 0 6px currentColor)}
+.timer-num{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(255,255,255,.35)}
+.timer-num.danger{animation:beat .5s infinite;color:var(--red)}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:10px;padding:2px 2px 4px;scrollbar-width:none}
+.stage::-webkit-scrollbar{display:none}
+.question-box{background:linear-gradient(150deg,rgba(35,55,105,.7),rgba(14,22,45,.85));border:1px solid var(--line);border-radius:20px;padding:16px 18px;box-shadow:0 12px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);animation:slideIn .5s cubic-bezier(.2,.9,.3,1);flex-shrink:0}
+@keyframes slideIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+.q-label{font-size:11px;font-weight:900;color:var(--cyan);letter-spacing:2px;margin-bottom:7px;opacity:.85}
+.q-text{font-size:16.5px;font-weight:800;line-height:2.05}
+.visual{display:grid;place-items:center;padding:14px 10px;background:rgba(255,255,255,.022);border:1px dashed rgba(120,180,255,.16);border-radius:20px;min-height:130px;animation:slideIn .55s cubic-bezier(.2,.9,.3,1) .05s backwards;flex-shrink:0}
+.steps{display:flex;flex-direction:column;gap:8px;flex-shrink:0;position:relative}
+.step{background:linear-gradient(90deg,rgba(62,231,255,.13),rgba(62,231,255,.02));border-right:3px solid var(--cyan);border-radius:13px;padding:10px 14px 10px 12px;opacity:0;transform:translateX(34px);animation:stepIn .55s cubic-bezier(.2,.9,.3,1) forwards;box-shadow:0 6px 22px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);position:relative;display:flex;align-items:flex-start;gap:10px}
+.step::before{content:attr(data-num);flex-shrink:0;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#04121a;font-weight:900;font-size:11px;box-shadow:0 0 12px rgba(62,231,255,.5);margin-top:2px}
+@keyframes stepIn{to{opacity:1;transform:translateX(0)}}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:11px;font-weight:900;color:var(--cyan);margin-bottom:4px;letter-spacing:1px}
+.step-text{font-size:14px;line-height:2.05;color:#d3e2ff}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex-shrink:0}
+.opt{position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;padding:15px 14px;border-radius:17px;font-family:inherit;font-size:18px;font-weight:900;color:var(--txt);cursor:pointer;background:linear-gradient(150deg,rgba(44,66,120,.6),rgba(18,27,54,.85));border:1.5px solid rgba(120,180,255,.2);transition:transform .18s,border-color .25s,box-shadow .25s,background .25s;box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);text-align:right;min-height:62px}
+.opt:active:not(.done){transform:scale(.95)}
+.opt-key{width:28px;height:28px;flex-shrink:0;display:grid;place-items:center;border-radius:9px;font-size:13px;font-weight:900;background:rgba(255,255,255,.08);color:var(--muted);transition:.25s}
+.opt-txt{display:flex;align-items:center;flex:1;min-height:30px;line-height:1.7;font-size:14px;flex-wrap:wrap;gap:4px;font-family:"Cambria Math","Times New Roman",serif;justify-content:flex-start}
+.opt.correct{background:linear-gradient(150deg,rgba(34,229,138,.28),rgba(10,80,55,.6));border-color:var(--green);color:#c9ffe6;box-shadow:0 0 0 2px rgba(34,229,138,.35),0 0 34px rgba(34,229,138,.55);animation:popGreen .6s cubic-bezier(.34,1.56,.64,1)}
+.opt.correct .opt-key{background:var(--green);color:#04241a}
+@keyframes popGreen{0%{transform:scale(1)}35%{transform:scale(1.09)}70%{transform:scale(.98)}100%{transform:scale(1)}}
+.opt.wrong{background:linear-gradient(150deg,rgba(255,59,107,.28),rgba(90,10,35,.6));border-color:var(--red);color:#ffd0dd;box-shadow:0 0 0 2px rgba(255,59,107,.35),0 0 34px rgba(255,59,107,.5);animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+.opt.wrong .opt-key{background:var(--red);color:#3a0014}
+@keyframes shake{10%,90%{transform:translateX(-3px)}20%,80%{transform:translateX(5px)}30%,50%,70%{transform:translateX(-8px)}40%,60%{transform:translateX(8px)}}
+.opt.reveal{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,74,.4),0 0 30px rgba(255,210,74,.55);animation:revealPulse 1s ease-in-out infinite}
+.opt.reveal .opt-key{background:var(--gold);color:#3d2a00}
+@keyframes revealPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.opt.done{pointer-events:none}
+.opt.faded{opacity:.35;filter:grayscale(.7)}
+.float-coin{position:fixed;z-index:9998;pointer-events:none;font-size:30px;font-weight:900;color:var(--gold);text-shadow:0 0 22px rgba(255,210,74,.9);animation:floatUp 1.3s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-90%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-200%) scale(.9)}}
+.particle{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:9997;animation:particleFly .9s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes particleFly{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(0);opacity:0}}
+.ripple{position:fixed;border-radius:50%;pointer-events:none;z-index:9996;border:3px solid var(--green);animation:rippleOut .75s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes rippleOut{0%{width:0;height:0;opacity:.9;transform:translate(-50%,-50%)}100%{width:280px;height:280px;opacity:0;transform:translate(-50%,-50%)}}
+.end-card{width:min(460px,100%);text-align:center;background:linear-gradient(160deg,rgba(28,42,80,.88),rgba(12,18,38,.94));border:1px solid var(--line);border-radius:28px;padding:36px 26px 30px;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.end-emoji{font-size:64px;margin-bottom:8px;animation:pulseLogo 2s infinite}
+.end-title{font-size:22px;font-weight:900;margin-bottom:16px;color:var(--muted)}
+.end-coins{font-size:56px;font-weight:900;color:var(--gold);text-shadow:0 0 36px rgba(255,210,74,.65);font-variant-numeric:tabular-nums;line-height:1.1}
+.end-rank{display:inline-block;margin-top:12px;padding:7px 22px;border-radius:20px;font-size:15px;font-weight:900;background:linear-gradient(135deg,rgba(62,231,255,.18),rgba(160,107,255,.18));border:1px solid rgba(120,180,255,.35);color:var(--cyan)}
+.end-stats{display:flex;gap:10px;margin:22px 0 24px;justify-content:center}
+.stat{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:12px 8px}
+.stat b{display:block;font-size:22px;font-weight:900;color:var(--txt)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.btn-start{width:100%;padding:17px;border:none;border-radius:18px;font-family:inherit;font-size:18px;font-weight:900;color:#04121a;background:linear-gradient(135deg,#3ee7ff,#22e58a);cursor:pointer;position:relative;overflow:hidden;box-shadow:0 10px 34px rgba(62,231,255,.35);transition:transform .15s,box-shadow .2s}
+.btn-start:active{transform:scale(.96)}
+.btn-start::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shine 2.6s infinite}
+@keyframes shine{0%{left:-120%}55%{left:140%}100%{left:140%}}
+@keyframes pulseLogo{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.viz-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.viz-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.eqline{font-size:18px;font-weight:900;direction:ltr !important;unicode-bidi:isolate !important;color:var(--txt);text-shadow:0 0 14px rgba(255,255,255,.15);padding:4px 0;font-family:"Cambria Math","Times New Roman",serif;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;line-height:1.5}
+.note{font-size:12px;color:var(--muted);font-weight:700;text-align:center;line-height:1.7}
+.legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;font-size:11.5px;font-weight:900}
+.legend span{padding:4px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;border-radius:10px;font-weight:900;font-size:13px;border:1px solid rgba(255,255,255,.1)}
+@media (max-width:400px){
+  .opt{font-size:16px;padding:12px 10px}
+  .opt-txt{font-size:12.5px}
+  .q-text{font-size:15px}
+  .timer-wrap{width:70px;height:70px}
+  .timer-num{font-size:21px}
+  .hud-item{padding:8px 12px;font-size:15px}
+  .eqline{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div id="gameScreen" class="screen active">
+  <div class="game-wrap">
+    <div class="hud">
+      <div class="hud-item coins" id="coinBox">
+        <span class="coin-icon">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coinFace" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#fff8d0"/><stop offset="35%" stop-color="#ffd94a"/><stop offset="70%" stop-color="#f5a600"/><stop offset="100%" stop-color="#a85f00"/></radialGradient>
+              <radialGradient id="coinInner" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#fff0a8"/><stop offset="60%" stop-color="#ffc21f"/><stop offset="100%" stop-color="#c47a00"/></radialGradient>
+              <linearGradient id="coinEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff3b0"/><stop offset="50%" stop-color="#e8a300"/><stop offset="100%" stop-color="#8a4f00"/></linearGradient>
+            </defs>
+            <circle cx="16" cy="16" r="15" fill="url(#coinEdge)"/>
+            <circle cx="16" cy="16" r="13" fill="url(#coinFace)"/>
+            <circle cx="16" cy="16" r="10" fill="url(#coinInner)" opacity=".95"/>
+            <text x="16" y="20.7" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#fff8c8">$</text>
+          </svg>
+        </span>
+        <span id="coinVal">0</span>
+      </div>
+      <div class="timer-wrap">
+        <svg class="ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="44"></circle><circle class="ring-fg" id="ringFg" cx="50" cy="50" r="44"></circle></svg>
+        <div class="timer-num" id="timerNum">60</div>
+      </div>
+      <div class="hud-item qcount"><span id="qNum">1</span><span class="slash">/</span><span id="qTotal">14</span></div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="question-box">
+        <div class="q-label">سؤال</div>
+        <div class="q-text" id="qText"></div>
+      </div>
+      <div class="visual" id="visual"></div>
+      <div class="steps" id="steps"></div>
+    </div>
+    <div class="options" id="options"></div>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="end-card">
+    <div class="end-emoji" id="endEmoji">🏆</div>
+    <div class="end-title" id="endTitle">پایان بازی</div>
+    <div class="end-coins" id="endCoins">0</div>
+    <div class="end-rank" id="endRank">مبتدی</div>
+    <div class="end-stats">
+      <div class="stat"><b id="stCorrect">0</b><span>پاسخ صحیح</span></div>
+      <div class="stat"><b id="stFast">0</b><span>پاسخ برق‌آسا</span></div>
+      <div class="stat"><b id="stTotal">0</b><span>سؤال</span></div>
+    </div>
+    <button class="btn-start" id="btnHome">بازگشت به صفحه خانه 🏠</button>
+  </div>
+</div>
+
+<script>
+function toFa(n){ return String(n).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]); }
+function fr(n, d){
+  return `<span class="frac-inline"><span class="fnum">${n}</span><span class="fden">${d}</span></span>`;
+}
+/* نمایش کسر داخل SVG با صورت و مخرج روی هم و خط کسری وسط */
+function svgFrac(cx, cy, n, d, color, size){
+  size = size || 12;
+  const maxLen = Math.max(String(n).length, String(d).length);
+  const w = maxLen * size * 0.75 + 10;
+  return `<text x="${cx}" y="${cy - 3}" text-anchor="middle" fill="${color}" font-size="${size}" font-weight="900" direction="ltr">${n}</text>`
+       + `<line x1="${cx - w/2}" y1="${cy}" x2="${cx + w/2}" y2="${cy}" stroke="${color}" stroke-width="1.6"/>`
+       + `<text x="${cx}" y="${cy + size + 1}" text-anchor="middle" fill="${color}" font-size="${size}" font-weight="900" direction="ltr">${d}</text>`;
+}
+const C = {
+  x:  s => `<span class="c-cyan">${s}</span>`,
+  g:  s => `<span class="c-green">${s}</span>`,
+  c:  s => `<span class="c-gold">${s}</span>`,
+  v:  s => `<span class="c-violet">${s}</span>`,
+  p:  s => `<span class="c-pink">${s}</span>`,
+  op: s => `<span class="c-m">${s}</span>`
+};
+
+const QUESTIONS = [
+
+/* ============ Q1 ============ */
+{
+  q: 'کدام مجموعه شامل <b>سه کسر بین</b> ' + fr('۳','۴') + ' و ' + fr('۲','۵') + ' است؟',
+  opts: [
+    `<span class="math">${fr('۱','۲')} ، ${fr('۳','۵')} ، ${fr('۲','۳')}</span>`,
+    `<span class="math">${fr('۲','۵')} ، ${fr('۱','۲')} ، ${fr('۳','۴')}</span>`,
+    `<span class="math">${fr('۳','۴')} ، ${fr('۷','۸')} ، ${fr('۹','۱۰')}</span>`,
+    `<span class="math">${fr('۱','۳')} ، ${fr('۱','۴')} ، ${fr('۱','۵')}</span>`
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 480 220" style="width:100%;max-width:460px;height:auto;display:block">
+        <text x="240" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">محور اعداد</text>
+        <line x1="30" y1="110" x2="450" y2="110" stroke="#8ea3c9" stroke-width="2"/>
+        ${[0,0.25,0.5,0.75,1].map((v,i) => {
+          const x = 60 + v*360;
+          return `<line x1="${x}" y1="102" x2="${x}" y2="118" stroke="#8ea3c9" stroke-width="2"/>
+                  <text x="${x}" y="142" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900" direction="ltr">${v}</text>`;
+        }).join('')}
+        <line x1="${60 + 0.4*360}" y1="110" x2="${60 + 0.75*360}" y2="110" stroke="#22e58a" stroke-width="5" opacity="0.6"/>
+        <circle cx="${60 + 0.4*360}" cy="110" r="6" fill="#3ee7ff" stroke="#04121a" stroke-width="1.5"/>
+        <circle cx="${60 + 0.75*360}" cy="110" r="6" fill="#0a1220" stroke="#3ee7ff" stroke-width="2.5"/>
+        <circle cx="${60 + 0.5*360}" cy="110" r="5" fill="#22e58a"/>
+        <circle cx="${60 + 0.6*360}" cy="110" r="5" fill="#22e58a"/>
+        <circle cx="${60 + 0.6667*360}" cy="110" r="5" fill="#22e58a"/>
+        ${svgFrac(60 + 0.4*360, 172, '۲', '۵', '#3ee7ff', 12)}
+        <text x="${60 + 0.4*360}" y="200" text-anchor="middle" fill="#3ee7ff" font-size="11" font-weight="900" direction="ltr">= 0.4</text>
+        ${svgFrac(60 + 0.75*360, 172, '۳', '۴', '#3ee7ff', 12)}
+        <text x="${60 + 0.75*360}" y="200" text-anchor="middle" fill="#3ee7ff" font-size="11" font-weight="900" direction="ltr">= 0.75</text>
+        ${svgFrac(60 + 0.5*360, 82, '۱', '۲', '#22e58a', 11)}
+        ${svgFrac(60 + 0.6*360, 82, '۳', '۵', '#22e58a', 11)}
+        ${svgFrac(60 + 0.6667*360, 82, '۲', '۳', '#22e58a', 11)}
+      </svg>
+      <div class="note">هر کسری که مقدارش بین ۰٫۴ و ۰٫۷۵ باشد، قابل قبول است</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">' + fr('۲','۵') + ' = ۰٫۴</span> و <span class="math">' + fr('۳','۴') + ' = ۰٫۷۵</span>' },
+    { at:44, title:'گام ۲', text:'کسرهای بین ۰٫۴ و ۰٫۷۵: <span class="math">' + fr('۱','۲') + ' = ۰٫۵</span> ، <span class="math">' + fr('۳','۵') + ' = ۰٫۶</span> ، <span class="math">' + fr('۲','۳') + ' ≈ ۰٫۶۶۷</span>' },
+    { at:48, title:'گام ۳', text:'هر سه مقدار در بازهٔ (۰٫۴ ، ۰٫۷۵) قرار دارند ⇒ پاسخ صحیح' },
+  ]
+},
+
+/* ============ Q2 ============ */
+{
+  q: 'کسرهای ' + fr('۵','۶') + ' ، ' + fr('۳','۵') + ' ، ' + fr('۷','۸') + ' ، ' + fr('۵','۹') + ' را از <b>کوچک به بزرگ</b> مرتب کنید.',
+  opts: [
+    `<span class="math">${fr('۵','۹')} < ${fr('۳','۵')} < ${fr('۵','۶')} < ${fr('۷','۸')}</span>`,
+    `<span class="math">${fr('۳','۵')} < ${fr('۵','۹')} < ${fr('۵','۶')} < ${fr('۷','۸')}</span>`,
+    `<span class="math">${fr('۵','۹')} < ${fr('۵','۶')} < ${fr('۳','۵')} < ${fr('۷','۸')}</span>`,
+    `<span class="math">${fr('۷','۸')} < ${fr('۵','۶')} < ${fr('۳','۵')} < ${fr('۵','۹')}</span>`
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 480 260" style="width:100%;max-width:460px;height:auto;display:block">
+        <text x="240" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">مقدار اعشاری کسرها</text>
+        ${[
+          {n:'۷', d:'۸', v:0.875, c:'#ffd24a'},
+          {n:'۵', d:'۶', v:0.833, c:'#a06bff'},
+          {n:'۳', d:'۵', v:0.6,   c:'#3ee7ff'},
+          {n:'۵', d:'۹', v:0.556, c:'#22e58a'}
+        ].map((f, i) => {
+          const y = 60 + i*46;
+          const w = f.v * 380;
+          return `
+            ${svgFrac(40, y+16, f.n, f.d, f.c, 13)}
+            <rect x="70" y="${y}" width="${w}" height="32" rx="6" fill="${f.c}" opacity="0.35" stroke="${f.c}" stroke-width="1.5"/>
+            <text x="${80 + w}" y="${y+22}" fill="${f.c}" font-size="13" font-weight="900" direction="ltr">${f.v}</text>
+          `;
+        }).join('')}
+      </svg>
+      <div class="note">با تبدیل به اعشاری، مقایسه آسان‌تر می‌شود</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'تبدیل به اعشاری: <span class="math">' + fr('۵','۹') + ' ≈ ۰٫۵۵۶</span> ، <span class="math">' + fr('۳','۵') + ' = ۰٫۶</span> ، <span class="math">' + fr('۵','۶') + ' ≈ ۰٫۸۳۳</span> ، <span class="math">' + fr('۷','۸') + ' = ۰٫۸۷۵</span>' },
+    { at:44, title:'گام ۲', text:'مرتب‌سازی صعودی: <span class="math">۰٫۵۵۶ < ۰٫۶ < ۰٫۸۳۳ < ۰٫۸۷۵</span>' },
+    { at:48, title:'گام ۳', text:'⇒ ' + fr('۵','۹') + ' < ' + fr('۳','۵') + ' < ' + fr('۵','۶') + ' < ' + fr('۷','۸') },
+  ]
+},
+
+/* ============ Q3 ============ */
+{
+  q: 'کدام گزینه دربارهٔ نمایش اعشاری کسرهای ' + fr('۳','۸') + ' ، ' + fr('۱','۳') + ' ، ' + fr('۷','۶') + ' <b>صحیح</b> است؟',
+  opts: [
+    `${fr('۳','۸')} مختوم ، ${fr('۱','۳')} و ${fr('۷','۶')} متناوب`,
+    'هر سه مختوم هستند',
+    'هر سه متناوب هستند',
+    `${fr('۱','۳')} مختوم ، ${fr('۳','۸')} و ${fr('۷','۶')} متناوب`
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <div class="legend">
+        <span class="c-green">مختوم — تقسیم پایان می‌یابد</span>
+        <span class="c-gold">متناوب — رقم تکرار می‌شود</span>
+      </div>
+      <svg viewBox="0 0 460 220" style="width:100%;max-width:440px;height:auto;display:block">
+        ${[
+          {n:'۳', d:'۸', decimal:'۰٫۳۷۵',     type:'مختوم',  c:'#22e58a'},
+          {n:'۱', d:'۳', decimal:'۰٫۳۳۳…',    type:'متناوب', c:'#ffd24a'},
+          {n:'۷', d:'۶', decimal:'۱٫۱۶۶۶…',   type:'متناوب', c:'#ffd24a'}
+        ].map((row, i) => {
+          const y = 30 + i*60;
+          return `
+            <rect x="20" y="${y}" width="420" height="50" rx="10" fill="rgba(62,231,255,.06)" stroke="${row.c}" stroke-width="1.8"/>
+            ${svgFrac(80, y+25, row.n, row.d, '#e8f0ff', 16)}
+            <text x="220" y="${y+32}" text-anchor="middle" fill="${row.c}" font-size="16" font-weight="900" direction="ltr">= ${row.decimal}</text>
+            <text x="380" y="${y+32}" text-anchor="middle" fill="${row.c}" font-size="14" font-weight="900">${row.type}</text>
+          `;
+        }).join('')}
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">۳ ÷ ۸ = ۰٫۳۷۵</span> ⇒ پس از ۳ رقم تمام می‌شود ⇒ <b>مختوم</b>' },
+    { at:44, title:'گام ۲', text:'<span class="math">۱ ÷ ۳ = ۰٫۳۳۳…</span> ⇒ رقم ۳ تکرار می‌شود ⇒ <b>متناوب</b>' },
+    { at:48, title:'گام ۳', text:'<span class="math">۷ ÷ ۶ = ۱٫۱۶۶۶…</span> ⇒ رقم ۶ تکرار می‌شود ⇒ <b>متناوب</b>' },
+  ]
+},
+
+/* ============ Q4 — کادر شکل اصلاح‌شده ============ */
+{
+  q: 'نمایش اعشاری کسر ' + fr('۳','۸') + ' کدام است؟',
+  opts: [
+    '<span class="math">۰٫۳۷۵</span>',
+    '<span class="math">۰٫۳۸</span>',
+    '<span class="math">۰٫۳۳۳…</span>',
+    '<span class="math">۰٫۳۷۵۳۷۵…</span>'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 340 200" style="width:100%;max-width:320px;height:auto;display:block">
+        <text x="170" y="30" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">تقسیم ۳ بر ۸</text>
+        <text x="140" y="68" text-anchor="middle" fill="#22e58a" font-size="20" font-weight="900" direction="ltr">3</text>
+        <line x1="100" y1="78" x2="180" y2="78" stroke="#8ea3c9" stroke-width="2"/>
+        <text x="140" y="100" text-anchor="middle" fill="#22e58a" font-size="20" font-weight="900" direction="ltr">8</text>
+        <text x="200" y="88" fill="#ffd24a" font-size="16" font-weight="900">=</text>
+        <text x="240" y="88" text-anchor="middle" fill="#ffd24a" font-size="24" font-weight="900" direction="ltr">0.375</text>
+        <text x="170" y="150" text-anchor="middle" fill="#3ee7ff" font-size="12" font-weight="900">پس از ۳ رقم اعشار، باقیمانده صفر می‌شود</text>
+        <text x="170" y="175" text-anchor="middle" fill="#22e58a" font-size="13" font-weight="900">⇒ اعشاری مختوم</text>
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">۳ ÷ ۸</span>: ابتدا صفر اعشار، سپس رقم به رقم' },
+    { at:44, title:'گام ۲', text:'<span class="math">۳۰ ÷ ۸ = ۳</span> باقیمانده ۶ — <span class="math">۶۰ ÷ ۸ = ۷</span> باقیمانده ۴ — <span class="math">۴۰ ÷ ۸ = ۵</span> باقیمانده ۰' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">' + fr('۳','۸') + ' = ۰٫۳۷۵</span>' },
+  ]
+},
+
+/* ============ Q5 — کادر شکل اصلاح‌شده ============ */
+{
+  q: 'نمایش اعشاری کسر ' + fr('۱','۳') + ' کدام است؟',
+  opts: [
+    '<span class="math">۰٫۳۳۳… = ۰٫۳̄</span> (متناوب)',
+    '<span class="math">۰٫۳</span> (مختوم)',
+    '<span class="math">۰٫۱۳</span>',
+    '<span class="math">۳</span>'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 340 200" style="width:100%;max-width:320px;height:auto;display:block">
+        <text x="170" y="30" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">تقسیم ۱ بر ۳</text>
+        <text x="140" y="68" text-anchor="middle" fill="#ffd24a" font-size="20" font-weight="900" direction="ltr">1</text>
+        <line x1="100" y1="78" x2="180" y2="78" stroke="#8ea3c9" stroke-width="2"/>
+        <text x="140" y="100" text-anchor="middle" fill="#ffd24a" font-size="20" font-weight="900" direction="ltr">3</text>
+        <text x="200" y="88" fill="#ffd24a" font-size="16" font-weight="900">=</text>
+        <text x="250" y="88" text-anchor="middle" fill="#ffd24a" font-size="22" font-weight="900" direction="ltr">0.333…</text>
+        <text x="170" y="150" text-anchor="middle" fill="#3ee7ff" font-size="12" font-weight="900">در هر مرحله، باقیمانده دوباره ۱ می‌شود</text>
+        <text x="170" y="175" text-anchor="middle" fill="#ffd24a" font-size="13" font-weight="900">⇒ اعشاری متناوب (رقم ۳ تکرار می‌شود)</text>
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">۱۰ ÷ ۳ = ۳</span> باقیمانده ۱' },
+    { at:44, title:'گام ۲', text:'باز هم <span class="math">۱۰ ÷ ۳ = ۳</span> باقیمانده ۱ — این چرخه ادامه دارد' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">' + fr('۱','۳') + ' = ۰٫۳۳۳… = ۰٫۳̄</span> (متناوب)' },
+  ]
+},
+
+/* ============ Q6 ============ */
+{
+  q: 'کدام‌یک از عددهای زیر <b>گنگ</b> است؟',
+  opts: [
+    '<span class="math">√۲</span> و <span class="math">π</span>',
+    '<span class="math">√۹</span> و <span class="math">۰</span>',
+    `<span class="math">${fr('۳','۲')}</span> و <span class="math">−۱۰</span>`,
+    'هیچ‌کدام گنگ نیستند'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 480 240" style="width:100%;max-width:460px;height:auto;display:block">
+        <text x="240" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">جای هر عدد در مجموعه‌های عددی</text>
+        ${[
+          {n:'−۱۰',      type:'Z',  c:'#3ee7ff', frac:false},
+          {n:'۳', d:'۲', type:'Q',  c:'#a06bff', frac:true},
+          {n:'۰',        type:'W',  c:'#3ee7ff', frac:false},
+          {n:'π',        type:"Q'", c:'#ff3b6b', frac:false},
+          {n:'√۹=۳',     type:'N',  c:'#3ee7ff', frac:false},
+          {n:'√۲',       type:"Q'", c:'#ff3b6b', frac:false}
+        ].map((item, i) => {
+          const x = 20 + i*76;
+          const content = item.frac
+            ? svgFrac(x + 34, 84, item.n, item.d, '#e8f0ff', 14)
+            : `<text x="${x+34}" y="92" text-anchor="middle" fill="#e8f0ff" font-size="15" font-weight="900" direction="ltr">${item.n}</text>`;
+          return `
+            <rect x="${x}" y="55" width="68" height="80" rx="10" fill="rgba(62,231,255,.08)" stroke="${item.c}" stroke-width="2"/>
+            ${content}
+            <text x="${x+34}" y="122" text-anchor="middle" fill="${item.c}" font-size="13" font-weight="900" direction="ltr">${item.type}</text>
+          `;
+        }).join('')}
+        <text x="240" y="175" text-anchor="middle" fill="#ff3b6b" font-size="13" font-weight="900">گنگ: Q' — عددهایی که به‌صورت کسر a/b نوشته نمی‌شوند</text>
+        <text x="240" y="205" text-anchor="middle" fill="#22e58a" font-size="12" font-weight="900">√۲ ≈ ۱٫۴۱۴۲… و π ≈ ۳٫۱۴۱۵۹… ⇒ اعشاری نامتناوب</text>
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'عدد گنگ: عددی که نمی‌توان آن را به‌صورت ' + fr('a','b') + ' نوشت (b ≠ ۰)' },
+    { at:44, title:'گام ۲', text:'<span class="math">√۲</span> و <span class="math">π</span> اعشاری نامتناوب دارند ⇒ گنگ هستند' },
+    { at:48, title:'گام ۳', text:'<span class="math">√۹ = ۳</span> گویا است، ' + fr('۳','۲') + ' کسر است ⇒ گویا' },
+  ]
+},
+
+/* ============ Q7 ============ */
+{
+  q: 'عدد <span class="math">−۱۰</span> عضو کدام‌یک از مجموعه‌های زیر <b>هست</b>؟',
+  opts: [
+    'صحیح (Z) ، گویا (Q) ، حقیقی (R)',
+    'طبیعی (N) ، حسابی (W) ، صحیح (Z)',
+    'فقط گنگ (Q\')',
+    'فقط طبیعی (N)'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 480 260" style="width:100%;max-width:460px;height:auto;display:block">
+        <text x="240" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">مجموعه‌های تودرتوی عددی</text>
+        <ellipse cx="240" cy="140" rx="220" ry="105" fill="rgba(62,231,255,.06)" stroke="#3ee7ff" stroke-width="2"/>
+        <text x="60" y="50" fill="#3ee7ff" font-size="14" font-weight="900" direction="ltr">R</text>
+        <ellipse cx="230" cy="140" rx="170" ry="82" fill="rgba(160,107,255,.08)" stroke="#a06bff" stroke-width="2"/>
+        <text x="88" y="72" fill="#a06bff" font-size="14" font-weight="900" direction="ltr">Q</text>
+        <ellipse cx="210" cy="140" rx="120" ry="58" fill="rgba(255,210,74,.10)" stroke="#ffd24a" stroke-width="2"/>
+        <text x="120" y="94" fill="#ffd24a" font-size="14" font-weight="900" direction="ltr">Z</text>
+        <ellipse cx="190" cy="140" rx="72" ry="35" fill="rgba(34,229,138,.12)" stroke="#22e58a" stroke-width="2"/>
+        <text x="146" y="118" fill="#22e58a" font-size="13" font-weight="900" direction="ltr">W</text>
+        <ellipse cx="175" cy="140" rx="35" ry="18" fill="rgba(255,255,255,.14)" stroke="#e8f0ff" stroke-width="1.5"/>
+        <text x="175" y="146" text-anchor="middle" fill="#e8f0ff" font-size="12" font-weight="900" direction="ltr">N</text>
+        <circle cx="330" cy="140" r="8" fill="#ff3b6b"/>
+        <text x="330" y="170" text-anchor="middle" fill="#ff3b6b" font-size="14" font-weight="900" direction="ltr">−10</text>
+      </svg>
+      <div class="note">−۱۰ صحیح است ولی طبیعی و حسابی نیست</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'عدد <span class="math">−۱۰</span> منفی است ⇒ طبیعی (N) و حسابی (W) نیست' },
+    { at:44, title:'گام ۲', text:'می‌توان به‌صورت ' + fr('−۱۰','۱') + ' نوشت ⇒ گویا است و صحیح' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">−۱۰ ∈ Z ، Q ، R</span>' },
+  ]
+},
+
+/* ============ Q8 ============ */
+{
+  q: 'مجموعهٔ <span class="math">A = {x ∈ R | −۲ ≤ x < ۳}</span> را با <b>نماد بازه‌ای</b> چگونه نمایش می‌دهیم؟',
+  opts: [
+    '<span class="math">[−۲ ، ۳)</span>',
+    '<span class="math">(−۲ ، ۳]</span>',
+    '<span class="math">(−۲ ، ۳)</span>',
+    '<span class="math">[−۲ ، ۳]</span>'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 480 200" style="width:100%;max-width:460px;height:auto;display:block">
+        <text x="240" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">محور اعداد حقیقی</text>
+        <line x1="30" y1="110" x2="450" y2="110" stroke="#8ea3c9" stroke-width="2"/>
+        <polygon points="450,110 440,105 440,115" fill="#8ea3c9"/>
+        ${[-3,-2,-1,0,1,2,3,4].map((v,i) => {
+          const x = 90 + (v+3)*45;
+          return `<line x1="${x}" y1="102" x2="${x}" y2="118" stroke="#8ea3c9" stroke-width="2"/>
+                  <text x="${x}" y="142" text-anchor="middle" fill="#8ea3c9" font-size="13" font-weight="900" direction="ltr">${v}</text>`;
+        }).join('')}
+        ${(() => {
+          const x1 = 90 + 1*45;
+          const x2 = 90 + 6*45;
+          return `<line x1="${x1}" y1="110" x2="${x2}" y2="110" stroke="#22e58a" stroke-width="6" opacity="0.65"/>`;
+        })()}
+        <circle cx="${90 + 1*45}" cy="110" r="7" fill="#22e58a" stroke="#04121a" stroke-width="1.5"/>
+        <circle cx="${90 + 6*45}" cy="110" r="7" fill="#0a1220" stroke="#22e58a" stroke-width="2.5"/>
+        <text x="${90 + 1*45}" y="182" text-anchor="middle" fill="#22e58a" font-size="12" font-weight="900">توپر (شامل)</text>
+        <text x="${90 + 6*45}" y="182" text-anchor="middle" fill="#22e58a" font-size="12" font-weight="900">توخالی (بدون)</text>
+      </svg>
+      <div class="note">کروشه در سمت عدد شامل ⇒ توپر — پرانتز در سمت عدد بدون ⇒ توخالی</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'نامساوی <span class="math">−۲ ≤ x</span> شامل خود ۲− ⇒ کروشه بسته <span class="math">[</span>' },
+    { at:44, title:'گام ۲', text:'نامساوی <span class="math">x < ۳</span> بدون خود ۳ ⇒ پرانتز باز <span class="math">)</span>' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">A = [−۲ ، ۳)</span>' },
+  ]
+},
+
+/* ============ Q9 — کسرها به شکل کسری واقعی در متن و کادر ============ */
+{
+  q: 'اگر <span class="math">a = ' + fr('−۱','۴') + '</span> ، <span class="math">b = ' + fr('−۱','۲') + '</span> و <span class="math">c = ۲</span> باشد، مقدار <span class="math">|a+b| + ۲|a−b−c|</span> کدام است؟',
+  opts: [
+    fr('۱۷','۴'),
+    fr('۱۳','۴'),
+    fr('۵','۴'),
+    fr('۱۹','۴')
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:440px">
+        <div style="background:rgba(62,231,255,.06);border:1.5px solid #3ee7ff;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="direction:ltr;font-size:14px;font-weight:900;color:#e8f0ff;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+            <span>a + b =</span>${fr('−۱','۴')}<span>+ (</span>${fr('−۱','۲')}<span>) =</span>${fr('−۳','۴')}
+          </div>
+          <div style="color:#3ee7ff;direction:ltr;font-weight:900;font-size:13px;display:flex;align-items:center;gap:4px">|a+b| = ${fr('۳','۴')}</div>
+        </div>
+        <div style="background:rgba(34,229,138,.06);border:1.5px solid #22e58a;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="direction:ltr;font-size:14px;font-weight:900;color:#e8f0ff;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+            <span>a − b − c =</span>${fr('−۱','۴')}<span>+</span>${fr('۱','۲')}<span>− ۲ =</span>${fr('−۷','۴')}
+          </div>
+          <div style="color:#22e58a;direction:ltr;font-weight:900;font-size:13px;display:flex;align-items:center;gap:4px">|a−b−c| = ${fr('۷','۴')}</div>
+        </div>
+        <div style="background:rgba(255,210,74,.06);border:1.5px solid #ffd24a;border-radius:10px;padding:8px 12px;display:flex;flex-direction:column;align-items:center;gap:2px">
+          <div style="direction:ltr;font-size:14px;font-weight:900;color:#e8f0ff;display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:center">
+            <span>حاصل =</span>${fr('۳','۴')}<span>+ ۲×</span>${fr('۷','۴')}<span>=</span>${fr('۳','۴')}<span>+</span>${fr('۱۴','۴')}
+          </div>
+          <div style="color:#ffd24a;direction:ltr;font-weight:900;font-size:14px;display:flex;align-items:center;gap:4px">= ${fr('۱۷','۴')}</div>
+        </div>
+      </div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">a+b = ' + fr('−۱','۴') + ' − ' + fr('۱','۲') + ' = ' + fr('−۳','۴') + '</span> ⇒ <span class="math">|a+b| = ' + fr('۳','۴') + '</span>' },
+    { at:44, title:'گام ۲', text:'<span class="math">a−b−c = ' + fr('−۱','۴') + ' + ' + fr('۱','۲') + ' − ۲ = ' + fr('−۷','۴') + '</span> ⇒ <span class="math">|a−b−c| = ' + fr('۷','۴') + '</span>' },
+    { at:48, title:'گام ۳', text:'حاصل: <span class="math">' + fr('۳','۴') + ' + ۲×' + fr('۷','۴') + ' = ' + fr('۳','۴') + ' + ' + fr('۱۴','۴') + ' = ' + fr('۱۷','۴') + '</span>' },
+  ]
+},
+
+/* ============ Q10 ============ */
+{
+  q: 'حاصل عبارت <span class="math">|۰٫۲۵ − ۰٫۲۶|</span> کدام است؟',
+  opts: [
+    '<span class="math">۰٫۰۱</span>',
+    '<span class="math">−۰٫۰۱</span>',
+    '<span class="math">۰٫۵۱</span>',
+    '<span class="math">۰</span>'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 400 180" style="width:100%;max-width:380px;height:auto;display:block">
+        <text x="200" y="30" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">محاسبه گام‌به‌گام</text>
+        <text x="200" y="70" text-anchor="middle" fill="#3ee7ff" font-size="18" font-weight="900" direction="ltr">0.25 − 0.26 = −0.01</text>
+        <text x="200" y="105" text-anchor="middle" fill="#ffd24a" font-size="18" font-weight="900" direction="ltr">|−0.01| = 0.01</text>
+        <text x="200" y="150" text-anchor="middle" fill="#22e58a" font-size="14" font-weight="900">قدر مطلق، فاصله از صفر است ⇒ همیشه ≥ ۰</text>
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'ابتدا داخل قدر مطلق: <span class="math">۰٫۲۵ − ۰٫۲۶ = −۰٫۰۱</span>' },
+    { at:44, title:'گام ۲', text:'قدر مطلق، علامت منفی را حذف می‌کند' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">|−۰٫۰۱| = ۰٫۰۱</span>' },
+  ]
+},
+
+/* ============ Q11 ============ */
+{
+  q: 'حاصل عبارت <span class="math">(۱ − √۳)²</span> کدام است؟',
+  opts: [
+    '<span class="math">۴ − ۲√۳</span>',
+    '<span class="math">۴ + ۲√۳</span>',
+    '<span class="math">۲ − ۲√۳</span>',
+    '<span class="math">−۲</span>'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 460 200" style="width:100%;max-width:440px;height:auto;display:block">
+        <text x="230" y="22" text-anchor="middle" fill="#8ea3c9" font-size="12" font-weight="900">اتحاد مربع دوجمله‌ای</text>
+        <text x="230" y="60" text-anchor="middle" fill="#3ee7ff" font-size="17" font-weight="900" direction="ltr">(a − b)² = a² − 2ab + b²</text>
+        <text x="230" y="95" text-anchor="middle" fill="#e8f0ff" font-size="17" font-weight="900" direction="ltr">(1)² − 2·1·√3 + (√3)²</text>
+        <text x="230" y="128" text-anchor="middle" fill="#e8f0ff" font-size="17" font-weight="900" direction="ltr">= 1 − 2√3 + 3</text>
+        <text x="230" y="165" text-anchor="middle" fill="#22e58a" font-size="18" font-weight="900" direction="ltr">= 4 − 2√3</text>
+      </svg>
+      <div class="note">دقت: (√۳)² = ۳ نه ۹</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'اتحاد دوم: <span class="math">(a−b)² = a² − ۲ab + b²</span>' },
+    { at:44, title:'گام ۲', text:'<span class="math">(۱−√۳)² = ۱ − ۲√۳ + ۳</span>' },
+    { at:48, title:'گام ۳', text:'<span class="math">= ۴ − ۲√۳ ≈ ۰٫۵۳۶</span>' },
+  ]
+},
+
+/* ============ Q12 ============ */
+{
+  q: 'با قرار دادن علامت مناسب، رابطهٔ بین <span class="math">|−۷|²</span> و <span class="math">|(−۷)²|</span> کدام است؟',
+  opts: [
+    '<span class="math">|−۷|² = |(−۷)²|</span>',
+    '<span class="math">|−۷|² &gt; |(−۷)²|</span>',
+    '<span class="math">|−۷|² &lt; |(−۷)²|</span>',
+    'قابل مقایسه نیستند'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 460 180" style="width:100%;max-width:440px;height:auto;display:block">
+        <text x="120" y="40" text-anchor="middle" fill="#3ee7ff" font-size="15" font-weight="900">سمت چپ</text>
+        <text x="340" y="40" text-anchor="middle" fill="#a06bff" font-size="15" font-weight="900">سمت راست</text>
+        <rect x="20" y="60" width="200" height="60" rx="10" fill="rgba(62,231,255,.12)" stroke="#3ee7ff" stroke-width="2"/>
+        <text x="120" y="90" text-anchor="middle" fill="#3ee7ff" font-size="15" font-weight="900" direction="ltr">|−7|² = 7²</text>
+        <text x="120" y="112" text-anchor="middle" fill="#3ee7ff" font-size="17" font-weight="900" direction="ltr">= 49</text>
+        <rect x="240" y="60" width="200" height="60" rx="10" fill="rgba(160,107,255,.12)" stroke="#a06bff" stroke-width="2"/>
+        <text x="340" y="90" text-anchor="middle" fill="#a06bff" font-size="15" font-weight="900" direction="ltr">|(−7)²| = |49|</text>
+        <text x="340" y="112" text-anchor="middle" fill="#a06bff" font-size="17" font-weight="900" direction="ltr">= 49</text>
+        <text x="230" y="170" text-anchor="middle" fill="#22e58a" font-size="22" font-weight="900" direction="ltr">۴۹ = ۴۹</text>
+      </svg>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">|−۷| = ۷</span> ⇒ <span class="math">|−۷|² = ۷² = ۴۹</span>' },
+    { at:44, title:'گام ۲', text:'<span class="math">(−۷)² = ۴۹</span> ⇒ <span class="math">|(−۷)²| = ۴۹</span>' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">۴۹ = ۴۹</span> ⇒ دو طرف <b>برابرند</b>' },
+  ]
+},
+
+/* ============ Q13 ============ */
+{
+  q: 'رابطهٔ بین <span class="math">|−۸+۵|</span> و <span class="math">|−۸|+|۵|</span> کدام است؟',
+  opts: [
+    '<span class="math">|−۸+۵| &lt; |−۸|+|۵|</span>',
+    '<span class="math">|−۸+۵| = |−۸|+|۵|</span>',
+    '<span class="math">|−۸+۵| &gt; |−۸|+|۵|</span>',
+    'قابل مقایسه نیستند'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 460 200" style="width:100%;max-width:440px;height:auto;display:block">
+        <text x="120" y="35" text-anchor="middle" fill="#3ee7ff" font-size="14" font-weight="900">سمت چپ</text>
+        <text x="340" y="35" text-anchor="middle" fill="#a06bff" font-size="14" font-weight="900">سمت راست</text>
+        <rect x="20" y="55" width="200" height="70" rx="10" fill="rgba(62,231,255,.12)" stroke="#3ee7ff" stroke-width="2"/>
+        <text x="120" y="85" text-anchor="middle" fill="#3ee7ff" font-size="14" font-weight="900" direction="ltr">|−8 + 5| = |−3|</text>
+        <text x="120" y="110" text-anchor="middle" fill="#3ee7ff" font-size="18" font-weight="900" direction="ltr">= 3</text>
+        <rect x="240" y="55" width="200" height="70" rx="10" fill="rgba(160,107,255,.12)" stroke="#a06bff" stroke-width="2"/>
+        <text x="340" y="85" text-anchor="middle" fill="#a06bff" font-size="14" font-weight="900" direction="ltr">|−8| + |5| = 8 + 5</text>
+        <text x="340" y="110" text-anchor="middle" fill="#a06bff" font-size="18" font-weight="900" direction="ltr">= 13</text>
+        <text x="230" y="175" text-anchor="middle" fill="#ffd24a" font-size="20" font-weight="900" direction="ltr">۳ &lt; ۱۳</text>
+      </svg>
+      <div class="note">قدر مطلق مجموع ≤ مجموع قدر مطلق‌ها</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">|−۸+۵| = |−۳| = ۳</span>' },
+    { at:44, title:'گام ۲', text:'<span class="math">|−۸|+|۵| = ۸ + ۵ = ۱۳</span>' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">۳ < ۱۳</span> ⇒ همیشه <span class="math">|a+b| ≤ |a|+|b|</span>' },
+  ]
+},
+
+/* ============ Q14 ============ */
+{
+  q: 'رابطهٔ بین <span class="math">|۳−۹|</span> و <span class="math">|۳|−|۹|</span> کدام است؟',
+  opts: [
+    '<span class="math">|۳−۹| &gt; |۳|−|۹|</span>',
+    '<span class="math">|۳−۹| = |۳|−|۹|</span>',
+    '<span class="math">|۳−۹| &lt; |۳|−|۹|</span>',
+    'قابل مقایسه نیستند'
+  ],
+  correct: 0,
+  visual: `
+    <div class="viz-wrap">
+      <svg viewBox="0 0 460 200" style="width:100%;max-width:440px;height:auto;display:block">
+        <text x="120" y="35" text-anchor="middle" fill="#3ee7ff" font-size="14" font-weight="900">سمت چپ</text>
+        <text x="340" y="35" text-anchor="middle" fill="#a06bff" font-size="14" font-weight="900">سمت راست</text>
+        <rect x="20" y="55" width="200" height="70" rx="10" fill="rgba(62,231,255,.12)" stroke="#3ee7ff" stroke-width="2"/>
+        <text x="120" y="85" text-anchor="middle" fill="#3ee7ff" font-size="14" font-weight="900" direction="ltr">|3 − 9| = |−6|</text>
+        <text x="120" y="110" text-anchor="middle" fill="#3ee7ff" font-size="18" font-weight="900" direction="ltr">= 6</text>
+        <rect x="240" y="55" width="200" height="70" rx="10" fill="rgba(160,107,255,.12)" stroke="#a06bff" stroke-width="2"/>
+        <text x="340" y="85" text-anchor="middle" fill="#a06bff" font-size="14" font-weight="900" direction="ltr">|3| − |9| = 3 − 9</text>
+        <text x="340" y="110" text-anchor="middle" fill="#a06bff" font-size="18" font-weight="900" direction="ltr">= −6</text>
+        <text x="230" y="175" text-anchor="middle" fill="#ffd24a" font-size="20" font-weight="900" direction="ltr">۶ &gt; −۶</text>
+      </svg>
+      <div class="note">قدر مطلق همیشه ≥ ۰ است، ولی تفاضل قدر مطلق‌ها می‌تواند منفی باشد</div>
+    </div>
+  `,
+  steps: [
+    { at:40, title:'گام ۱', text:'<span class="math">|۳−۹| = |−۶| = ۶</span>' },
+    { at:44, title:'گام ۲', text:'<span class="math">|۳|−|۹| = ۳ − ۹ = −۶</span>' },
+    { at:48, title:'گام ۳', text:'⇒ <span class="math">۶ > −۶</span>' },
+  ]
+},
+
+];
+
+/* ============================================================
+   شافل تصادفی گزینهٔ صحیح
+   ============================================================ */
+(function shuffleCorrectAnswer(){
+  const n = QUESTIONS.length;
+  const positions = [];
+  const base = Math.floor(n / 4);
+  const rem  = n % 4;
+  for(let p = 0; p < 4; p++){
+    const count = base + (p < rem ? 1 : 0);
+    for(let k = 0; k < count; k++) positions.push(p);
+  }
+  for(let i = positions.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [positions[i], positions[j]] = [positions[j], positions[i]];
+  }
+  QUESTIONS.forEach((q, i) => {
+    const target = positions[i];
+    if(target === q.correct) return;
+    const opts = q.opts.slice();
+    [opts[q.correct], opts[target]] = [opts[target], opts[q.correct]];
+    q.opts = opts;
+    q.correct = target;
+  });
+})();
+
+const TOTAL_TIME = 60;
+const CIRC = 2 * Math.PI * 44;
+
+const state = {
+  qi: 0, coins: 0, t: 0, running: false, answered: false,
+  rafId: null, lastTs: 0, shown: [], revealed: false, zone: '',
+  correctCount: 0, fastCount: 0, locked: false,
+};
+
+const $ = id => document.getElementById(id);
+const gameScreen  = $('gameScreen');
+const endScreen   = $('endScreen');
+const qText       = $('qText');
+const visualEl    = $('visual');
+const stepsEl     = $('steps');
+const optionsEl   = $('options');
+const stageEl     = $('stage');
+const timerNum    = $('timerNum');
+const ringFg      = $('ringFg');
+const coinVal     = $('coinVal');
+const coinBox     = $('coinBox');
+const qNumEl      = $('qNum');
+
+$('qTotal').textContent = toFa(QUESTIONS.length);
+qNumEl.textContent = '۱';
+
+let AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, dur, type='sine', vol=0.07, delay=0){
+  const c = ac(); if(!c) return;
+  const t = c.currentTime + delay;
+  const o = c.createOscillator(); const g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const SFX = {
+  correct(){ tone(660,.14,'sine',.08,0); tone(880,.14,'sine',.08,.09); tone(1320,.30,'sine',.09,.19); tone(1760,.35,'triangle',.05,.28); },
+  wrong(){ tone(200,.20,'sawtooth',.06,0); tone(150,.36,'sawtooth',.06,.13); },
+  coin(){ tone(1180,.07,'square',.05,0); tone(1560,.11,'square',.05,.06); },
+  tick(){ tone(1000,.035,'square',.028,0); },
+  step(){ tone(720,.09,'sine',.045,0); tone(1080,.12,'sine',.035,.07); },
+  reveal(){ tone(500,.18,'triangle',.05,0); tone(400,.3,'triangle',.045,.14); },
+  start(){ [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.08)); },
+  end(){ [784,988,1175,1568].forEach((f,i)=>tone(f,.3,'sine',.075,i*.14)); }
+};
+
+function burst(x, y, colors){
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    p.style.background = colors[i % colors.length];
+    p.style.boxShadow = '0 0 12px ' + colors[i % colors.length];
+    const a = Math.random() * Math.PI * 2; const d = 60 + Math.random() * 130;
+    p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+    p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.appendChild(p); setTimeout(() => p.remove(), 950);
+  }
+}
+function ripple(x, y, color){
+  const r = document.createElement('div');
+  r.className = 'ripple'; r.style.left = x + 'px'; r.style.top = y + 'px';
+  r.style.borderColor = color; document.body.appendChild(r); setTimeout(() => r.remove(), 800);
+}
+function floatText(x, y, txt, color){
+  const el = document.createElement('div');
+  el.className = 'float-coin'; el.textContent = txt;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.color = color; el.style.textShadow = '0 0 24px ' + color;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1350);
+}
+
+function resetGame(){
+  state.qi = 0; state.coins = 0; state.correctCount = 0;
+  state.fastCount = 0; state.locked = false;
+  coinVal.textContent = '۰'; loadQuestion();
+}
+
+function loadQuestion(){
+  const q = QUESTIONS[state.qi];
+  state.t = 0; state.answered = false; state.revealed = false;
+  state.shown = []; state.zone = ''; state.lastTs = 0;
+  state.lastTick = null; state.running = true;
+
+  qNumEl.textContent = toFa(state.qi + 1);
+  qText.innerHTML = q.q; stepsEl.innerHTML = '';
+  visualEl.innerHTML = q.visual;
+  visualEl.style.animation = 'none';
+  void visualEl.offsetWidth;
+  visualEl.style.animation = '';
+
+  optionsEl.innerHTML = q.opts.map((o, i) =>
+    `<button class="opt" data-i="${i}">
+       <span class="opt-key">${['الف','ب','ج','د'][i]}</span>
+       <span class="opt-txt">${o}</span>
+     </button>`
+  ).join('');
+
+  optionsEl.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => choose(+btn.dataset.i, btn));
+  });
+
+  stageEl.scrollTop = 0;
+  updateZone('z1'); render();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function loop(ts){
+  if(!state.running) return;
+  if(!state.lastTs) state.lastTs = ts;
+  let dt = (ts - state.lastTs) / 1000;
+  state.lastTs = ts; if(dt > 0.25) dt = 0.25;
+  state.t += dt;
+  if(state.t >= TOTAL_TIME){ state.t = TOTAL_TIME; render(); timeUp(); return; }
+  render(); checkSteps();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function render(){
+  const t = state.t; const remain = Math.ceil(TOTAL_TIME - t);
+  timerNum.textContent = toFa(remain);
+  ringFg.style.strokeDashoffset = CIRC * (t / TOTAL_TIME);
+  let zone;
+  if(t < 10) zone = 'z1'; else if(t < 50) zone = 'z2'; else zone = 'z3';
+  if(zone !== state.zone) updateZone(zone);
+  if(zone === 'z3' && remain <= 10 && remain !== state.lastTick && remain > 0){
+    state.lastTick = remain; SFX.tick();
+  }
+}
+function updateZone(z){
+  state.zone = z;
+  const colors = { z1:'#22e58a', z2:'#3ee7ff', z3:'#ff3b6b' };
+  ringFg.style.stroke = colors[z];
+  timerNum.classList.toggle('danger', z === 'z3');
+}
+function checkSteps(){
+  const q = QUESTIONS[state.qi];
+  q.steps.forEach((s, i) => {
+    if(!state.shown[i] && state.t >= s.at){ state.shown[i] = true; addStep(s, i); }
+  });
+  if(!state.revealed && state.t >= 52){ state.revealed = true; revealAnswer(); }
+}
+function addStep(s, idx){
+  const el = document.createElement('div');
+  el.className = 'step'; el.dataset.num = toFa(idx + 1);
+  el.innerHTML = `<div class="step-body"><div class="step-title">${s.title}</div><div class="step-text">${s.text}</div></div>`;
+  stepsEl.appendChild(el); SFX.step();
+  setTimeout(() => { stageEl.scrollTo({ top: stageEl.scrollHeight, behavior: 'smooth' }); }, 80);
+}
+function revealAnswer(){
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach((o, i) => { if(i === q.correct) o.classList.add('reveal'); else o.classList.add('faded'); });
+  SFX.reveal();
+}
+function choose(idx, btn){
+  if(state.answered || state.locked) return;
+  state.answered = true; state.running = false;
+  cancelAnimationFrame(state.rafId);
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  const isCorrect = idx === q.correct;
+  opts.forEach(o => o.classList.add('done'));
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  if(isCorrect){
+    btn.classList.add('correct'); state.correctCount++;
+    let gain = 0;
+    if(state.t < 10) gain = 20; else if(state.t < 50) gain = 10; else gain = 0;
+    if(gain > 0){
+      if(gain === 20) state.fastCount++;
+      state.coins += gain; coinVal.textContent = toFa(state.coins);
+      coinBox.classList.remove('bump'); void coinBox.offsetWidth;
+      coinBox.classList.add('bump'); SFX.coin();
+      setTimeout(() => SFX.coin(), 130);
+      floatText(cx, cy, '+' + toFa(gain), '#ffd24a');
+    } else { floatText(cx, cy, '+۰', '#ff3b6b'); }
+    SFX.correct(); burst(cx, cy, ['#22e58a','#3ee7ff','#ffd24a','#a06bff']);
+    ripple(cx, cy, '#22e58a'); fastForwardSteps();
+  } else {
+    btn.classList.add('wrong'); SFX.wrong();
+    burst(cx, cy, ['#ff3b6b','#ff7a9c','#ffd24a']);
+    ripple(cx, cy, '#ff3b6b');
+    opts[q.correct].classList.add('correct'); fastForwardSteps();
+  }
+  setTimeout(nextQuestion, isCorrect ? 1900 : 2400);
+}
+function fastForwardSteps(){
+  const q = QUESTIONS[state.qi];
+  const pending = q.steps.filter((s, i) => !state.shown[i]);
+  pending.forEach((s, k) => {
+    const idx = q.steps.indexOf(s); state.shown[idx] = true;
+    setTimeout(() => addStep(s, idx), 320 + k * 480);
+  });
+}
+function timeUp(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  if(state.answered) return; state.answered = true;
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach(o => o.classList.add('done'));
+  opts[q.correct].classList.add('correct');
+  opts.forEach((o, i) => { if(i !== q.correct) o.classList.add('faded'); });
+  SFX.wrong();
+  const r = opts[q.correct].getBoundingClientRect();
+  burst(r.left + r.width/2, r.top + r.height/2, ['#ffd24a','#ff3b6b','#3ee7ff']);
+  fastForwardSteps(); setTimeout(nextQuestion, 2200);
+}
+function nextQuestion(){
+  state.qi++;
+  if(state.qi >= QUESTIONS.length){ endGame(); return; }
+  loadQuestion();
+}
+let coinsSentToFlutter = false;
+function sendCoinsToFlutter(){
+  if(coinsSentToFlutter) return;
+  coinsSentToFlutter = true;
+  const finalCoins = (typeof state !== 'undefined' && state.coins) ? state.coins : 0;
+  if(typeof CoinChannel !== 'undefined'){
+    CoinChannel.postMessage(String(finalCoins));
+  } else if(window.CoinChannel){
+    window.CoinChannel.postMessage(String(finalCoins));
+  }
+}
+function returnToHomeScreen(){
+  sendCoinsToFlutter();
+  if(typeof HomeChannel !== 'undefined'){
+    HomeChannel.postMessage('goHome');
+  } else if(window.HomeChannel){
+    window.HomeChannel.postMessage('goHome');
+  }
+}
+
+function endGame(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  gameScreen.classList.remove('active'); endScreen.classList.add('active');
+  SFX.end();
+  $('endCoins').textContent = toFa(state.coins);
+  sendCoinsToFlutter();
+  $('stCorrect').textContent = toFa(state.correctCount) + ' / ' + toFa(QUESTIONS.length);
+  $('stFast').textContent = toFa(state.fastCount);
+  $('stTotal').textContent = toFa(QUESTIONS.length);
+  let rank, emoji, color;
+  if(state.coins >= 230){ rank = 'افسانه‌ی ریاضی'; emoji = '👑'; color = '#ffd24a'; }
+  else if(state.coins >= 165){ rank = 'نابغه'; emoji = '🧠'; color = '#3ee7ff'; }
+  else if(state.coins >= 105){ rank = 'حرفه‌ای'; emoji = '🏆'; color = '#22e58a'; }
+  else if(state.coins >= 50){ rank = 'خوب'; emoji = '⭐'; color = '#a06bff'; }
+  else { rank = 'تازه‌کار'; emoji = '🌱'; color = '#8ea3c9'; }
+  $('endEmoji').textContent = emoji; $('endRank').textContent = rank;
+  $('endRank').style.color = color; $('endCoins').style.color = color;
+  $('endCoins').style.textShadow = '0 0 36px ' + color + 'aa';
+  let n = 0;
+  const iv = setInterval(() => {
+    burst(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.6,
+      ['#ffd24a','#3ee7ff','#22e58a','#a06bff','#ff3b6b']);
+    if(++n > 5) clearInterval(iv);
+  }, 220);
+}
+
+document.addEventListener('keydown', e => {
+  if(!gameScreen.classList.contains('active')) return;
+  const map = { '1':0, '2':1, '3':2, '4':3, '۱':0, '۲':1, '۳':2, '۴':3 };
+  if(e.key in map){
+    const btn = optionsEl.querySelectorAll('.opt')[map[e.key]];
+    if(btn && !state.answered) btn.click();
+  }
+});
+
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if(now - lastTouch < 300) e.preventDefault();
+  lastTouch = now;
+}, { passive:false });
+
+document.addEventListener('touchstart', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+document.addEventListener('click', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+
+window.addEventListener('load', () => {
+  resetGame();
+  const btn = document.getElementById('btnRestart') || document.getElementById('btnHome');
+  if(btn){
+    btn.addEventListener('click', returnToHomeScreen);
+  }
+});
+</script>
+</body>
+</html>

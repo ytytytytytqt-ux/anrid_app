@@ -1,0 +1,757 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>چالش نابغه‌ها | ریاضی</title>
+<style>
+:root{
+  --bg:#070b18;--cyan:#3ee7ff;--green:#22e58a;--red:#ff3b6b;--gold:#ffd24a;--violet:#a06bff;
+  --txt:#e8f0ff;--muted:#8ea3c9;--line:rgba(120,180,255,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:"Vazirmatn","IRANSans",Tahoma,"Segoe UI",system-ui,sans-serif;
+  background:radial-gradient(circle at 25% -10%,#16265c 0%,#070b18 55%,#03050d 100%);
+  color:var(--txt);user-select:none;position:relative;
+}
+.math{direction:ltr !important;unicode-bidi:isolate !important;display:inline-block}
+.frac-inline{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;vertical-align:middle;line-height:1.02;font-weight:900;color:inherit;margin:0 .18em;font-family:inherit;position:relative;top:-.06em}
+.frac-inline .fnum,.frac-inline .fden{display:block;text-align:center;padding:0 .4em;font-size:.75em;min-width:1.3em;letter-spacing:0}
+.frac-inline .fnum{padding-bottom:2px}
+.frac-inline .fden{padding-top:2px;border-top:2px solid currentColor}
+.bg-fx{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.35;animation:float 18s ease-in-out infinite}
+.orb.o1{width:340px;height:340px;background:#1e4bff;top:-120px;right:-90px}
+.orb.o2{width:280px;height:280px;background:#7a2bff;bottom:-110px;left:-80px;animation-delay:-6s}
+.orb.o3{width:220px;height:220px;background:#00c2a8;top:45%;left:55%;animation-delay:-11s;opacity:.2}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(-40px,30px) scale(1.15)}66%{transform:translate(30px,-25px) scale(.92)}}
+.screen{position:fixed;inset:0;z-index:5;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+.screen.active{display:flex;animation:fadeUp .5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+#gameScreen{padding:0;justify-content:flex-start}
+.game-wrap{width:min(720px,100%);height:100%;display:flex;flex-direction:column;padding:10px 12px calc(10px + env(safe-area-inset-bottom));gap:9px;position:relative;z-index:2}
+.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.hud-item{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:16px;padding:9px 15px;font-weight:900;font-size:17px;backdrop-filter:blur(8px)}
+.coins .coin-icon{width:24px;height:24px;display:grid;place-items:center;filter:drop-shadow(0 0 10px rgba(255,210,74,.9)) drop-shadow(0 0 4px rgba(255,160,20,.6));animation:coinSpin 3s linear infinite;transform-style:preserve-3d}
+@keyframes coinSpin{0%{transform:rotateY(0deg)}100%{transform:rotateY(360deg)}}
+.coins .coin-icon svg{display:block;width:100%;height:100%}
+.coins.bump{animation:bump .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.22)}100%{transform:scale(1)}}
+#coinVal{color:var(--gold);font-variant-numeric:tabular-nums}
+.qcount{color:var(--muted);font-size:15px}
+.qcount span:first-child{color:var(--txt);font-size:19px}
+.slash{opacity:.4;margin:0 3px}
+.timer-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring{width:100%;height:100%;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.07);stroke-width:7}
+.ring-fg{fill:none;stroke:var(--green);stroke-width:7;stroke-linecap:round;stroke-dasharray:276.46;stroke-dashoffset:0;transition:stroke .5s ease;filter:drop-shadow(0 0 6px currentColor)}
+.timer-num{position:absolute;inset:0;display:grid;place-items:center;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(255,255,255,.35)}
+.timer-num.danger{animation:beat .5s infinite;color:var(--red)}
+@keyframes beat{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.stage{flex:1;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:10px;padding:2px 2px 4px;scrollbar-width:none}
+.stage::-webkit-scrollbar{display:none}
+.question-box{background:linear-gradient(150deg,rgba(35,55,105,.7),rgba(14,22,45,.85));border:1px solid var(--line);border-radius:20px;padding:16px 18px;box-shadow:0 12px 34px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06);animation:slideIn .5s cubic-bezier(.2,.9,.3,1);flex-shrink:0}
+@keyframes slideIn{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+.q-label{font-size:11px;font-weight:900;color:var(--cyan);letter-spacing:2px;margin-bottom:7px;opacity:.85}
+.q-text{font-size:17.5px;font-weight:800;line-height:1.75}
+.visual{display:grid;place-items:center;padding:14px 10px;background:rgba(255,255,255,.022);border:1px dashed rgba(120,180,255,.16);border-radius:20px;min-height:150px;animation:slideIn .55s cubic-bezier(.2,.9,.3,1) .05s backwards;flex-shrink:0}
+.steps{display:flex;flex-direction:column;gap:8px;flex-shrink:0;position:relative}
+.step{background:linear-gradient(90deg,rgba(62,231,255,.13),rgba(62,231,255,.02));border-right:3px solid var(--cyan);border-radius:13px;padding:10px 14px 10px 12px;opacity:0;transform:translateX(34px);animation:stepIn .55s cubic-bezier(.2,.9,.3,1) forwards;box-shadow:0 6px 22px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.04);position:relative;display:flex;align-items:flex-start;gap:10px}
+.step::before{content:attr(data-num);flex-shrink:0;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#04121a;font-weight:900;font-size:11px;box-shadow:0 0 12px rgba(62,231,255,.5);margin-top:2px}
+@keyframes stepIn{to{opacity:1;transform:translateX(0)}}
+.step-body{flex:1;min-width:0}
+.step-title{font-size:11px;font-weight:900;color:var(--cyan);margin-bottom:4px;letter-spacing:1px}
+.step-text{font-size:14px;line-height:1.7;color:#d3e2ff}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:9px;flex-shrink:0}
+.opt{position:relative;overflow:hidden;display:flex;align-items:center;gap:11px;padding:15px 14px;border-radius:17px;font-family:inherit;font-size:18px;font-weight:900;color:var(--txt);cursor:pointer;background:linear-gradient(150deg,rgba(44,66,120,.6),rgba(18,27,54,.85));border:1.5px solid rgba(120,180,255,.2);transition:transform .18s,border-color .25s,box-shadow .25s,background .25s;box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.05);text-align:right}
+.opt:active:not(.done){transform:scale(.95)}
+.opt-key{width:28px;height:28px;flex-shrink:0;display:grid;place-items:center;border-radius:9px;font-size:13px;font-weight:900;background:rgba(255,255,255,.08);color:var(--muted);transition:.25s}
+.opt-txt{display:flex;align-items:center;flex:1;min-height:24px;line-height:1.5;font-size:15px}
+.opt.correct{background:linear-gradient(150deg,rgba(34,229,138,.28),rgba(10,80,55,.6));border-color:var(--green);color:#c9ffe6;box-shadow:0 0 0 2px rgba(34,229,138,.35),0 0 34px rgba(34,229,138,.55);animation:popGreen .6s cubic-bezier(.34,1.56,.64,1)}
+.opt.correct .opt-key{background:var(--green);color:#04241a}
+@keyframes popGreen{0%{transform:scale(1)}35%{transform:scale(1.09)}70%{transform:scale(.98)}100%{transform:scale(1)}}
+.opt.wrong{background:linear-gradient(150deg,rgba(255,59,107,.28),rgba(90,10,35,.6));border-color:var(--red);color:#ffd0dd;box-shadow:0 0 0 2px rgba(255,59,107,.35),0 0 34px rgba(255,59,107,.5);animation:shake .5s cubic-bezier(.36,.07,.19,.97)}
+.opt.wrong .opt-key{background:var(--red);color:#3a0014}
+@keyframes shake{10%,90%{transform:translateX(-3px)}20%,80%{transform:translateX(5px)}30%,50%,70%{transform:translateX(-8px)}40%,60%{transform:translateX(8px)}}
+.opt.reveal{border-color:var(--gold);box-shadow:0 0 0 2px rgba(255,210,74,.4),0 0 30px rgba(255,210,74,.55);animation:revealPulse 1s ease-in-out infinite}
+.opt.reveal .opt-key{background:var(--gold);color:#3d2a00}
+@keyframes revealPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.035)}}
+.opt.done{pointer-events:none}
+.opt.faded{opacity:.35;filter:grayscale(.7)}
+.float-coin{position:fixed;z-index:9998;pointer-events:none;font-size:30px;font-weight:900;color:var(--gold);text-shadow:0 0 22px rgba(255,210,74,.9);animation:floatUp 1.3s cubic-bezier(.2,.9,.3,1) forwards}
+@keyframes floatUp{0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}25%{opacity:1;transform:translate(-50%,-90%) scale(1.25)}100%{opacity:0;transform:translate(-50%,-200%) scale(.9)}}
+.particle{position:fixed;width:9px;height:9px;border-radius:50%;pointer-events:none;z-index:9997;animation:particleFly .9s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes particleFly{0%{transform:translate(-50%,-50%) scale(1);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(0);opacity:0}}
+.ripple{position:fixed;border-radius:50%;pointer-events:none;z-index:9996;border:3px solid var(--green);animation:rippleOut .75s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes rippleOut{0%{width:0;height:0;opacity:.9;transform:translate(-50%,-50%)}100%{width:280px;height:280px;opacity:0;transform:translate(-50%,-50%)}}
+.end-card{width:min(460px,100%);text-align:center;background:linear-gradient(160deg,rgba(28,42,80,.88),rgba(12,18,38,.94));border:1px solid var(--line);border-radius:28px;padding:36px 26px 30px;box-shadow:0 30px 80px rgba(0,0,0,.65)}
+.end-emoji{font-size:64px;margin-bottom:8px;animation:pulseLogo 2s infinite}
+.end-title{font-size:22px;font-weight:900;margin-bottom:16px;color:var(--muted)}
+.end-coins{font-size:56px;font-weight:900;color:var(--gold);text-shadow:0 0 36px rgba(255,210,74,.65);font-variant-numeric:tabular-nums;line-height:1.1}
+.end-rank{display:inline-block;margin-top:12px;padding:7px 22px;border-radius:20px;font-size:15px;font-weight:900;background:linear-gradient(135deg,rgba(62,231,255,.18),rgba(160,107,255,.18));border:1px solid rgba(120,180,255,.35);color:var(--cyan)}
+.end-stats{display:flex;gap:10px;margin:22px 0 24px;justify-content:center}
+.stat{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:12px 8px}
+.stat b{display:block;font-size:22px;font-weight:900;color:var(--txt)}
+.stat span{font-size:11.5px;color:var(--muted)}
+.btn-start{width:100%;padding:17px;border:none;border-radius:18px;font-family:inherit;font-size:18px;font-weight:900;color:#04121a;background:linear-gradient(135deg,#3ee7ff,#22e58a);cursor:pointer;position:relative;overflow:hidden;box-shadow:0 10px 34px rgba(62,231,255,.35);transition:transform .15s,box-shadow .2s}
+.btn-start:active{transform:scale(.96)}
+.btn-start::after{content:'';position:absolute;top:0;left:-120%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:shine 2.6s infinite}
+@keyframes shine{0%{left:-120%}55%{left:140%}100%{left:140%}}
+@keyframes pulseLogo{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.viz-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.viz-row{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;justify-content:center;padding:6px 12px;border-radius:10px;font-weight:900;font-size:14px;border:1px solid rgba(255,255,255,.1)}
+.eqline{font-size:17px;font-weight:900;direction:ltr !important;unicode-bidi:isolate !important;color:var(--green);text-shadow:0 0 14px rgba(34,229,138,.5);padding:2px 0}
+.note{font-size:12px;color:var(--muted);font-weight:700;text-align:center}
+@media (max-width:400px){
+  .opt{font-size:16px;padding:13px 11px}
+  .opt-txt{font-size:13.5px}
+  .q-text{font-size:16px}
+  .timer-wrap{width:70px;height:70px}
+  .timer-num{font-size:21px}
+  .hud-item{padding:8px 12px;font-size:15px}
+  .chip{font-size:12px;padding:5px 9px}
+  .eqline{font-size:15px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-fx"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+
+<div id="gameScreen" class="screen active">
+  <div class="game-wrap">
+    <div class="hud">
+      <div class="hud-item coins" id="coinBox">
+        <span class="coin-icon">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="coinFace" cx="35%" cy="30%" r="75%"><stop offset="0%" stop-color="#fff8d0"/><stop offset="35%" stop-color="#ffd94a"/><stop offset="70%" stop-color="#f5a600"/><stop offset="100%" stop-color="#a85f00"/></radialGradient>
+              <radialGradient id="coinInner" cx="40%" cy="35%" r="70%"><stop offset="0%" stop-color="#fff0a8"/><stop offset="60%" stop-color="#ffc21f"/><stop offset="100%" stop-color="#c47a00"/></radialGradient>
+              <linearGradient id="coinEdge" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff3b0"/><stop offset="50%" stop-color="#e8a300"/><stop offset="100%" stop-color="#8a4f00"/></linearGradient>
+            </defs>
+            <circle cx="16" cy="16" r="15" fill="url(#coinEdge)"/>
+            <circle cx="16" cy="16" r="13" fill="url(#coinFace)"/>
+            <circle cx="16" cy="16" r="10" fill="url(#coinInner)" opacity=".95"/>
+            <text x="16" y="20.7" text-anchor="middle" font-family="Arial" font-size="13" font-weight="900" fill="#fff8c8">$</text>
+          </svg>
+        </span>
+        <span id="coinVal">0</span>
+      </div>
+      <div class="timer-wrap">
+        <svg class="ring" viewBox="0 0 100 100"><circle class="ring-bg" cx="50" cy="50" r="44"></circle><circle class="ring-fg" id="ringFg" cx="50" cy="50" r="44"></circle></svg>
+        <div class="timer-num" id="timerNum">60</div>
+      </div>
+      <div class="hud-item qcount"><span id="qNum">1</span><span class="slash">/</span><span id="qTotal">8</span></div>
+    </div>
+    <div class="stage" id="stage">
+      <div class="question-box">
+        <div class="q-label">سؤال</div>
+        <div class="q-text" id="qText"></div>
+      </div>
+      <div class="visual" id="visual"></div>
+      <div class="steps" id="steps"></div>
+    </div>
+    <div class="options" id="options"></div>
+  </div>
+</div>
+
+<div id="endScreen" class="screen">
+  <div class="end-card">
+    <div class="end-emoji" id="endEmoji">🏆</div>
+    <div class="end-title" id="endTitle">پایان بازی</div>
+    <div class="end-coins" id="endCoins">0</div>
+    <div class="end-rank" id="endRank">مبتدی</div>
+    <div class="end-stats">
+      <div class="stat"><b id="stCorrect">0</b><span>پاسخ صحیح</span></div>
+      <div class="stat"><b id="stFast">0</b><span>پاسخ برق‌آسا</span></div>
+      <div class="stat"><b id="stTotal">0</b><span>سؤال</span></div>
+    </div>
+    <button class="btn-start" id="btnRestart">بازگشت به صفحه خانه 🏠</button>
+  </div>
+</div>
+
+<script>
+function toFa(n){ return String(n).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]); }
+
+const QUESTIONS = [
+
+/* ---------- Q1 : روابط بین پاره‌خط‌ها ---------- */
+{
+  q: 'در شکل زیر، نقاط <span class="math">A، C، D و B</span> به همین ترتیب روی یک خط قرار دارند. اگر <span class="math">AB = ۷</span> سانتی‌متر، <span class="math">AC = ۲</span> سانتی‌متر و <span class="math">DB = ۴</span> سانتی‌متر باشد، طول پاره‌خط <b>CD</b> چند سانتی‌متر است؟',
+  opts: ['<span class="math">۳</span> سانتی‌متر','<span class="math">۲</span> سانتی‌متر','<span class="math">۱</span> سانتی‌متر','<span class="math">۴</span> سانتی‌متر'],
+  correct: 2,
+  visual: `
+    <svg viewBox="0 0 480 130" style="width:100%;max-width:480px;height:auto">
+      <line x1="30" y1="70" x2="450" y2="70" stroke="#8ea3c9" stroke-width="2.5"/>
+      <circle cx="30" cy="70" r="7" fill="#3ee7ff" stroke="#04121a" stroke-width="1.2"/>
+      <text x="30" y="98" text-anchor="middle" fill="#3ee7ff" font-size="16" font-weight="900" class="math">A</text>
+      <circle cx="150" cy="70" r="7" fill="#22e58a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="150" y="98" text-anchor="middle" fill="#22e58a" font-size="16" font-weight="900" class="math">C</text>
+      <circle cx="270" cy="70" r="7" fill="#ffd24a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="270" y="98" text-anchor="middle" fill="#ffd24a" font-size="16" font-weight="900" class="math">D</text>
+      <circle cx="450" cy="70" r="7" fill="#3ee7ff" stroke="#04121a" stroke-width="1.2"/>
+      <text x="450" y="98" text-anchor="middle" fill="#3ee7ff" font-size="16" font-weight="900" class="math">B</text>
+      <line x1="30" y1="55" x2="150" y2="55" stroke="#22e58a" stroke-width="2"/>
+      <text x="90" y="45" text-anchor="middle" fill="#22e58a" font-size="13" font-weight="900" class="math">AC = ۲</text>
+      <line x1="150" y1="40" x2="270" y2="40" stroke="#ff3b6b" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="210" y="30" text-anchor="middle" fill="#ff3b6b" font-size="13" font-weight="900" class="math">CD = ؟</text>
+      <line x1="270" y1="55" x2="450" y2="55" stroke="#ffd24a" stroke-width="2"/>
+      <text x="360" y="45" text-anchor="middle" fill="#ffd24a" font-size="13" font-weight="900" class="math">DB = ۴</text>
+      <line x1="30" y1="115" x2="450" y2="115" stroke="#3ee7ff" stroke-width="1.5" opacity=".7"/>
+      <text x="240" y="128" text-anchor="middle" fill="#3ee7ff" font-size="13" font-weight="900" class="math">AB = ۷</text>
+    </svg>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'نقاط به ترتیب A، C، D، B روی خط هستند، پس: <span class="math">AB = AC + CD + DB</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'جای اعداد می‌گذاریم: <span class="math">۷ = ۲ + CD + ۴</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">۷ = ۶ + CD</span> ← <span class="math">CD = ۱</span> سانتی‌متر' },
+  ]
+},
+
+/* ---------- Q2 : نقطهٔ وسط پاره‌خط ---------- */
+{
+  q: 'نقطهٔ <span class="math">C</span> وسط پاره‌خط <span class="math">AB</span> و نقطهٔ <span class="math">D</span> وسط پاره‌خط <span class="math">AC</span> است. اگر <span class="math">AB = ۲۰</span> سانتی‌متر باشد، طول پاره‌خط <b>AD</b> چند سانتی‌متر است؟',
+  opts: ['<span class="math">۵</span> سانتی‌متر','<span class="math">۱۰</span> سانتی‌متر','<span class="math">۱۵</span> سانتی‌متر','<span class="math">۲/۵</span> سانتی‌متر'],
+  correct: 0,
+  visual: `
+    <svg viewBox="0 0 460 180" style="width:100%;max-width:460px;height:auto">
+      <line x1="30" y1="90" x2="430" y2="90" stroke="#8ea3c9" stroke-width="2.5"/>
+      <circle cx="30" cy="90" r="7" fill="#3ee7ff" stroke="#04121a" stroke-width="1.2"/>
+      <text x="30" y="118" text-anchor="middle" fill="#3ee7ff" font-size="16" font-weight="900" class="math">A</text>
+      <circle cx="130" cy="90" r="7" fill="#22e58a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="130" y="118" text-anchor="middle" fill="#22e58a" font-size="16" font-weight="900" class="math">D</text>
+      <circle cx="230" cy="90" r="7" fill="#ffd24a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="230" y="118" text-anchor="middle" fill="#ffd24a" font-size="16" font-weight="900" class="math">C</text>
+      <circle cx="430" cy="90" r="7" fill="#3ee7ff" stroke="#04121a" stroke-width="1.2"/>
+      <text x="430" y="118" text-anchor="middle" fill="#3ee7ff" font-size="16" font-weight="900" class="math">B</text>
+
+      <line x1="30" y1="60" x2="230" y2="60" stroke="#ffd24a" stroke-width="2"/>
+      <foreignObject x="60" y="28" width="140" height="28">
+        <div xmlns="http://www.w3.org/1999/xhtml" dir="ltr"
+             style="color:#ffd24a;font-size:12px;font-weight:900;text-align:center;line-height:28px;font-family:'Vazirmatn','IRANSans',Tahoma,sans-serif">
+          AC =&nbsp;
+          <span class="frac-inline" style="color:#ffd24a">
+            <span class="fnum">۱</span>
+            <span class="fden">۲</span>
+          </span>
+          &nbsp;AB
+        </div>
+      </foreignObject>
+
+      <line x1="30" y1="25" x2="130" y2="25" stroke="#ff3b6b" stroke-width="2" stroke-dasharray="4 3"/>
+      <text x="80" y="16" text-anchor="middle" fill="#ff3b6b" font-size="13" font-weight="900" class="math">AD = ؟</text>
+
+      <line x1="30" y1="155" x2="430" y2="155" stroke="#3ee7ff" stroke-width="1.5" opacity=".7"/>
+      <text x="230" y="173" text-anchor="middle" fill="#3ee7ff" font-size="13" font-weight="900" class="math">AB = ۲۰</text>
+
+      <line x1="130" y1="84" x2="130" y2="96" stroke="#22e58a" stroke-width="2"/>
+      <line x1="230" y1="84" x2="230" y2="96" stroke="#ffd24a" stroke-width="2"/>
+    </svg>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'C وسط AB است، پس: <span class="math">AC = AB ÷ ۲ = ۲۰ ÷ ۲ = ۱۰</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'D وسط AC است، پس: <span class="math">AD = AC ÷ ۲</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">AD = ۱۰ ÷ ۲ = ۵</span> سانتی‌متر' },
+  ]
+},
+
+/* ---------- Q3 : روابط بین زاویه‌ها ---------- */
+{
+  q: 'دو خط در نقطهٔ <span class="math">O</span> یکدیگر را قطع کرده‌اند. اگر اندازهٔ زاویهٔ <span class="math">O₁</span> برابر <span class="math">۷۰°</span> باشد، اندازهٔ زاویه‌های <b><span class="math">O₂</span> و <span class="math">O₃</span> و <span class="math">O₄</span></b> به‌ترتیب کدام است؟',
+  opts: [
+    '<span class="math">۷۰° ، ۷۰° ، ۱۱۰°</span>',
+    '<span class="math">۷۰° ، ۱۱۰° ، ۷۰°</span>',
+    '<span class="math">۱۱۰° ، ۱۱۰° ، ۷۰°</span>',
+    '<span class="math">۱۱۰° ، ۷۰° ، ۱۱۰°</span>'
+  ],
+  correct: 3,
+  visual: `
+    <svg viewBox="0 0 340 260" style="width:100%;max-width:340px;height:auto">
+      <line x1="30" y1="40" x2="310" y2="220" stroke="#8ea3c9" stroke-width="2.5"/>
+      <line x1="310" y1="40" x2="30" y2="220" stroke="#8ea3c9" stroke-width="2.5"/>
+      <circle cx="170" cy="130" r="6" fill="#ffd24a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="185" y="145" fill="#ffd24a" font-size="16" font-weight="900" class="math">O</text>
+
+      <path d="M 144.8 113.8 A 30 30 0 0 1 195.2 113.8" fill="none" stroke="#22e58a" stroke-width="2.5"/>
+      <text x="170" y="80" text-anchor="middle" fill="#22e58a" font-size="13" font-weight="900" class="math">O₁ = ۷۰°</text>
+
+      <path d="M 195.2 113.8 A 30 30 0 0 1 195.2 146.2" fill="none" stroke="#a06bff" stroke-width="2.5"/>
+      <text x="235" y="135" text-anchor="middle" fill="#a06bff" font-size="13" font-weight="900" class="math">O₂ = ؟</text>
+
+      <path d="M 195.2 146.2 A 30 30 0 0 1 144.8 146.2" fill="none" stroke="#ff3b6b" stroke-width="2.5"/>
+      <text x="170" y="200" text-anchor="middle" fill="#ff3b6b" font-size="13" font-weight="900" class="math">O₃ = ؟</text>
+
+      <path d="M 144.8 146.2 A 30 30 0 0 1 144.8 113.8" fill="none" stroke="#3ee7ff" stroke-width="2.5"/>
+      <text x="100" y="135" text-anchor="middle" fill="#3ee7ff" font-size="13" font-weight="900" class="math">O₄ = ؟</text>
+    </svg>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'زاویه‌های متقابل به رأس با هم مساوی‌اند: <span class="math">O₁ = O₃ = ۷۰°</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'زاویه‌های مجاور روی یک خط، مکمل‌اند: <span class="math">O₁ + O₂ = ۱۸۰°</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'<span class="math">O₂ = ۱۸۰° − ۷۰° = ۱۱۰°</span> و <span class="math">O₄ = O₂ = ۱۱۰°</span>' },
+  ]
+},
+
+/* ---------- Q4 : زاویه‌های مثلث ---------- */
+{
+  q: 'در یک مثلث، اندازهٔ دو زاویه برابر <span class="math">۵۰°</span> و <span class="math">۶۰°</span> است. اندازهٔ زاویهٔ سوم چند درجه است؟',
+  opts: ['<span class="math">۶۰°</span>','<span class="math">۷۰°</span>','<span class="math">۸۰°</span>','<span class="math">۹۰°</span>'],
+  correct: 1,
+  visual: `
+    <svg viewBox="0 0 340 240" style="width:100%;max-width:340px;height:auto">
+      <polygon points="60,200 280,200 170,40" fill="rgba(62,231,255,.1)" stroke="#3ee7ff" stroke-width="2.5" stroke-linejoin="round"/>
+
+      <path d="M 90 200 A 30 30 0 0 0 77 175" fill="none" stroke="#22e58a" stroke-width="2.5"/>
+      <text x="105" y="192" fill="#22e58a" font-size="14" font-weight="900" class="math">۵۰°</text>
+
+      <path d="M 250 200 A 30 30 0 0 1 263 175" fill="none" stroke="#ffd24a" stroke-width="2.5"/>
+      <text x="235" y="192" text-anchor="end" fill="#ffd24a" font-size="14" font-weight="900" class="math">۶۰°</text>
+
+      <path d="M 153 65 A 30 30 0 0 0 187 65" fill="none" stroke="#ff3b6b" stroke-width="2.5"/>
+      <text x="170" y="88" text-anchor="middle" fill="#ff3b6b" font-size="17" font-weight="900" class="math">؟</text>
+
+      <text x="55" y="222" text-anchor="middle" fill="#8ea3c9" font-size="13" font-weight="900" class="math">A</text>
+      <text x="285" y="222" text-anchor="middle" fill="#8ea3c9" font-size="13" font-weight="900" class="math">B</text>
+      <text x="170" y="30" text-anchor="middle" fill="#8ea3c9" font-size="13" font-weight="900" class="math">C</text>
+    </svg>
+    <div class="note">مجموع زاویه‌های هر مثلث همیشه ۱۸۰ درجه است</div>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'مجموع زاویه‌های مثلث = <span class="math">۱۸۰°</span>' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">۵۰° + ۶۰° = ۱۱۰°</span> ← مجموع دو زاویهٔ معلوم' },
+    { at:48, cls:'', title:'گام ۳', text:'زاویهٔ سوم: <span class="math">۱۸۰° − ۱۱۰° = ۷۰°</span>' },
+  ]
+},
+
+/* ---------- Q5-الف : چرخش ۱۸۰ درجه ---------- */
+{
+  q: 'اگر شکل <span class="math">A</span> را <span class="math">۱۸۰°</span> در جهت حرکت عقربه‌های ساعت حول نقطهٔ <span class="math">O</span> بچرخانیم، شکل حاصل چه رابطه‌ای با شکل اصلی دارد؟',
+  opts: ['بزرگ‌تر از شکل اصلی می‌شود','کوچک‌تر از شکل اصلی می‌شود','با شکل اصلی <b>هم‌نهشت</b> است','قرینهٔ شکل اصلی نسبت به یک خط می‌شود'],
+  correct: 2,
+  visual: `
+    <svg viewBox="0 0 420 250" style="width:100%;max-width:420px;height:auto">
+      <circle cx="210" cy="120" r="6" fill="#ffd24a" stroke="#04121a" stroke-width="1.2"/>
+      <text x="222" y="138" fill="#ffd24a" font-size="15" font-weight="900" class="math">O</text>
+
+      <polygon points="265,80 315,80 290,45" fill="rgba(62,231,255,.18)" stroke="#3ee7ff" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="290" y="102" text-anchor="middle" fill="#3ee7ff" font-size="15" font-weight="900" class="math">A</text>
+
+      <path d="M 285 70 A 90 90 0 0 1 135 170" fill="none" stroke="#ffd24a" stroke-width="2.5" stroke-dasharray="6 3"/>
+      <polygon points="135,170 148,167 142,181" fill="#ffd24a"/>
+      <text x="210" y="48" text-anchor="middle" fill="#ffd24a" font-size="15" font-weight="900" class="math">۱۸۰°</text>
+
+      <polygon points="155,160 105,160 130,195" fill="none" stroke="#22e58a" stroke-width="2" stroke-dasharray="4 3" opacity=".75"/>
+      <text x="130" y="220" text-anchor="middle" fill="#22e58a" font-size="15" font-weight="900" class="math">B = ؟</text>
+    </svg>
+    <div class="note">در چرخش، فاصله‌ها و اندازه‌ها حفظ می‌شوند</div>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'چرخش یک تبدیل هندسی است که شکل را حول یک نقطه می‌چرخاند' },
+    { at:44, cls:'', title:'گام ۲', text:'در چرخش، <b>اندازه‌ها و زاویه‌ها تغییر نمی‌کنند</b>' },
+    { at:48, cls:'', title:'گام ۳', text:'بنابراین شکل A و B <b>هم‌نهشت</b> هستند' },
+  ]
+},
+
+/* ---------- Q5-ب : قرینه نسبت به خط ---------- */
+{
+  q: 'اگر شکل <span class="math">A</span> را نسبت به خط <span class="math">d</span> قرینه کنیم و شکل حاصل را <span class="math">C</span> بنامیم، کدام گزینه درست است؟',
+  opts: ['شکل A و C <b>هم‌نهشت</b> هستند ولی جهت آن‌ها برعکس می‌شود','شکل C بزرگ‌تر از A است','شکل C کوچک‌تر از A است','شکل C کاملاً بر A منطبق می‌شود'],
+  correct: 0,
+  visual: `
+    <svg viewBox="0 0 420 220" style="width:100%;max-width:420px;height:auto">
+      <line x1="210" y1="20" x2="210" y2="200" stroke="#ffd24a" stroke-width="2.5" stroke-dasharray="6 3"/>
+      <text x="215" y="15" fill="#ffd24a" font-size="14" font-weight="900" class="math">d</text>
+      <polygon points="120,80 170,80 145,40" fill="rgba(62,231,255,.18)" stroke="#3ee7ff" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="145" y="105" text-anchor="middle" fill="#3ee7ff" font-size="14" font-weight="900" class="math">A</text>
+      <polygon points="250,80 300,80 275,40" fill="none" stroke="#22e58a" stroke-width="2" stroke-dasharray="4 3" opacity=".7"/>
+      <text x="275" y="105" text-anchor="middle" fill="#22e58a" font-size="14" font-weight="900" class="math">C = ؟</text>
+      <line x1="145" y1="130" x2="145" y2="170" stroke="#ff3b6b" stroke-width="1" stroke-dasharray="3 3"/>
+      <line x1="275" y1="130" x2="275" y2="170" stroke="#ff3b6b" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="145" y="185" text-anchor="middle" fill="#ff3b6b" font-size="11">نقطه و قرینه‌اش هم‌فاصله از d</text>
+    </svg>
+    <div class="note">قرینه کردن = بازتاب نسبت به خط</div>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'در قرینه‌سازی، فاصلهٔ هر نقطه تا خط d با فاصلهٔ قرینه‌اش برابر است' },
+    { at:44, cls:'', title:'گام ۲', text:'اندازه‌های شکل C با A برابرند ولی <b>جهت برعکس</b> می‌شود' },
+    { at:48, cls:'', title:'گام ۳', text:'پس A و C هم‌نهشت‌اند ولی جهت‌شان برعکس است' },
+  ]
+},
+
+/* ---------- Q5-ج : هم‌نهشتی A, B, C — شکل C حالا ۹۰° در جهت عقربه‌های ساعت چرخیده ---------- */
+{
+  q: 'شکل <span class="math">A</span> را یک‌بار چرخاندیم (شکل B) و یک‌بار قرینه کردیم (شکل C). آیا شکل‌های <b>A و B و C</b> با هم مساوی‌اند؟',
+  opts: ['خیر، هیچ‌کدام با هم مساوی نیستند','خیر، فقط B با A مساوی است','خیر، فقط C با A مساوی است','بله، هر سه با هم مساوی و هم‌نهشت‌اند'],
+  correct: 3,
+  visual: `
+    <div class="viz-wrap">
+      <div style="display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <svg viewBox="0 0 100 80" width="90" height="72">
+            <polygon points="20,60 80,60 50,20" fill="rgba(62,231,255,.18)" stroke="#3ee7ff" stroke-width="2.5" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size:13px;color:#3ee7ff;font-weight:900">
+            <span class="math">A</span> <span>(اصلی)</span>
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <svg viewBox="0 0 100 80" width="90" height="72">
+            <polygon points="80,20 80,80 40,50" fill="rgba(34,229,138,.18)" stroke="#22e58a" stroke-width="2.5" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size:13px;color:#22e58a;font-weight:900">
+            <span class="math">B</span> <span>(چرخش)</span>
+          </span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+          <svg viewBox="0 0 100 80" width="90" height="72">
+            <polygon points="70,40 30,10 30,70" fill="rgba(255,210,74,.18)" stroke="#ffd24a" stroke-width="2.5" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size:13px;color:#ffd24a;font-weight:900">
+            <span class="math">C</span> <span>(قرینه)</span>
+          </span>
+        </div>
+      </div>
+      <div class="note">هر سه شکل اندازه‌های یکسان دارند</div>
+    </div>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'چرخش و تقارن، اندازه‌های شکل را حفظ می‌کنند' },
+    { at:44, cls:'', title:'گام ۲', text:'پس ضلع‌ها و زاویه‌های هر سه شکل یکسان است' },
+    { at:48, cls:'', title:'گام ۳', text:'بنابراین A، B و C هم‌نهشت (مساوی) هستند' },
+  ]
+},
+
+/* ---------- Q6 : شکل‌های هم‌نهشت — گزینهٔ درست در جایگاه ۴ ---------- */
+{
+  q: 'دو مثلث <span class="math">ABC</span> و <span class="math">DEF</span> هم‌نهشت‌اند و رأس‌های متناظر آن‌ها به‌ترتیب <span class="math">A↔D، B↔E، C↔F</span> است. اگر <span class="math">AB = ۵</span>، <span class="math">BC = ۷</span> و <span class="math">AC = ۶</span> سانتی‌متر باشد، طول ضلع‌های <b>DE و EF و DF</b> به‌ترتیب کدام است؟',
+  opts: [
+    '<span class="math">۷، ۶، ۵</span>',
+    '<span class="math">۵، ۶، ۷</span>',
+    '<span class="math">۶، ۷، ۵</span>',
+    '<span class="math">۵، ۷، ۶</span>'
+  ],
+  correct: 3,
+  visual: `
+    <svg viewBox="0 0 480 200" style="width:100%;max-width:480px;height:auto">
+      <polygon points="30,160 180,160 80,40" fill="rgba(62,231,255,.12)" stroke="#3ee7ff" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="25" y="180" fill="#3ee7ff" font-size="14" font-weight="900" class="math">A</text>
+      <text x="185" y="180" fill="#3ee7ff" font-size="14" font-weight="900" class="math">B</text>
+      <text x="75" y="30" fill="#3ee7ff" font-size="14" font-weight="900" class="math">C</text>
+      <text x="105" y="175" text-anchor="middle" fill="#3ee7ff" font-size="12" font-weight="900" class="math">AB = ۵</text>
+      <text x="140" y="105" fill="#3ee7ff" font-size="12" font-weight="900" class="math">BC = ۷</text>
+      <text x="30" y="105" fill="#3ee7ff" font-size="12" font-weight="900" class="math">AC = ۶</text>
+      <text x="240" y="110" text-anchor="middle" fill="#ffd24a" font-size="26" font-weight="900">≅</text>
+      <polygon points="300,160 450,160 350,40" fill="rgba(34,229,138,.12)" stroke="#22e58a" stroke-width="2.5" stroke-linejoin="round"/>
+      <text x="295" y="180" fill="#22e58a" font-size="14" font-weight="900" class="math">D</text>
+      <text x="455" y="180" fill="#22e58a" font-size="14" font-weight="900" class="math">E</text>
+      <text x="345" y="30" fill="#22e58a" font-size="14" font-weight="900" class="math">F</text>
+      <text x="375" y="175" text-anchor="middle" fill="#ff3b6b" font-size="12" font-weight="900" class="math">DE = ؟</text>
+      <text x="410" y="105" fill="#ff3b6b" font-size="12" font-weight="900" class="math">EF = ؟</text>
+      <text x="300" y="105" fill="#ff3b6b" font-size="12" font-weight="900" class="math">DF = ؟</text>
+    </svg>
+  `,
+  steps: [
+    { at:40, cls:'', title:'گام ۱', text:'در مثلث‌های هم‌نهشت، ضلع‌های متناظر با هم مساوی‌اند' },
+    { at:44, cls:'', title:'گام ۲', text:'<span class="math">DE = AB = ۵</span> ، <span class="math">EF = BC = ۷</span> ، <span class="math">DF = AC = ۶</span>' },
+    { at:48, cls:'', title:'گام ۳', text:'پس ترتیب <span class="math">DE، EF، DF</span> می‌شود: <span class="math">۵، ۷، ۶</span>' },
+  ]
+},
+];
+
+const TOTAL_TIME = 60;
+const CIRC = 2 * Math.PI * 44;
+
+const state = {
+  qi: 0, coins: 0, t: 0, running: false, answered: false,
+  rafId: null, lastTs: 0, shown: [], revealed: false, zone: '',
+  correctCount: 0, fastCount: 0, locked: false,
+};
+
+const $ = id => document.getElementById(id);
+const gameScreen  = $('gameScreen');
+const endScreen   = $('endScreen');
+const qText       = $('qText');
+const visualEl    = $('visual');
+const stepsEl     = $('steps');
+const optionsEl   = $('options');
+const stageEl     = $('stage');
+const timerNum    = $('timerNum');
+const ringFg      = $('ringFg');
+const coinVal     = $('coinVal');
+const coinBox     = $('coinBox');
+const qNumEl      = $('qNum');
+
+$('qTotal').textContent = toFa(QUESTIONS.length);
+qNumEl.textContent = '۱';
+
+let AC = null;
+function ac(){ if(!AC){ try{ AC = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){} } return AC; }
+function tone(freq, dur, type='sine', vol=0.07, delay=0){
+  const c = ac(); if(!c) return;
+  const t = c.currentTime + delay;
+  const o = c.createOscillator(); const g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.03);
+}
+const SFX = {
+  correct(){ tone(660,.14,'sine',.08,0); tone(880,.14,'sine',.08,.09); tone(1320,.30,'sine',.09,.19); tone(1760,.35,'triangle',.05,.28); },
+  wrong(){ tone(200,.20,'sawtooth',.06,0); tone(150,.36,'sawtooth',.06,.13); },
+  coin(){ tone(1180,.07,'square',.05,0); tone(1560,.11,'square',.05,.06); },
+  tick(){ tone(1000,.035,'square',.028,0); },
+  step(){ tone(720,.09,'sine',.045,0); tone(1080,.12,'sine',.035,.07); },
+  reveal(){ tone(500,.18,'triangle',.05,0); tone(400,.3,'triangle',.045,.14); },
+  start(){ [523,659,784,1047].forEach((f,i)=>tone(f,.18,'sine',.07,i*.08)); },
+  end(){ [784,988,1175,1568].forEach((f,i)=>tone(f,.3,'sine',.075,i*.14)); }
+};
+
+function burst(x, y, colors){
+  for(let i=0;i<20;i++){
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    p.style.background = colors[i % colors.length];
+    p.style.boxShadow = '0 0 12px ' + colors[i % colors.length];
+    const a = Math.random() * Math.PI * 2; const d = 60 + Math.random() * 130;
+    p.style.setProperty('--dx', Math.cos(a) * d + 'px');
+    p.style.setProperty('--dy', Math.sin(a) * d + 'px');
+    document.body.appendChild(p); setTimeout(() => p.remove(), 950);
+  }
+}
+function ripple(x, y, color){
+  const r = document.createElement('div');
+  r.className = 'ripple'; r.style.left = x + 'px'; r.style.top = y + 'px';
+  r.style.borderColor = color; document.body.appendChild(r); setTimeout(() => r.remove(), 800);
+}
+function floatText(x, y, txt, color){
+  const el = document.createElement('div');
+  el.className = 'float-coin'; el.textContent = txt;
+  el.style.left = x + 'px'; el.style.top = y + 'px';
+  el.style.color = color; el.style.textShadow = '0 0 24px ' + color;
+  document.body.appendChild(el); setTimeout(() => el.remove(), 1350);
+}
+
+/* دکمهٔ پایان بازی — طبق درخواست، کلیک روی آن هیچ اتفاقی نمی‌اندازد. */
+
+function resetGame(){
+  state.qi = 0; state.coins = 0; state.correctCount = 0;
+  state.fastCount = 0; state.locked = false;
+  coinVal.textContent = '۰'; loadQuestion();
+}
+
+function loadQuestion(){
+  const q = QUESTIONS[state.qi];
+  state.t = 0; state.answered = false; state.revealed = false;
+  state.shown = []; state.zone = ''; state.lastTs = 0;
+  state.lastTick = null; state.running = true;
+
+  qNumEl.textContent = toFa(state.qi + 1);
+  qText.innerHTML = q.q; stepsEl.innerHTML = '';
+  visualEl.innerHTML = q.visual;
+  visualEl.style.animation = 'none';
+  void visualEl.offsetWidth;
+  visualEl.style.animation = '';
+
+  optionsEl.innerHTML = q.opts.map((o, i) =>
+    `<button class="opt" data-i="${i}">
+       <span class="opt-key">${['الف','ب','ج','د'][i]}</span>
+       <span class="opt-txt">${o}</span>
+     </button>`
+  ).join('');
+
+  optionsEl.querySelectorAll('.opt').forEach(btn => {
+    btn.addEventListener('click', () => choose(+btn.dataset.i, btn));
+  });
+
+  stageEl.scrollTop = 0;
+  updateZone('z1'); render();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function loop(ts){
+  if(!state.running) return;
+  if(!state.lastTs) state.lastTs = ts;
+  let dt = (ts - state.lastTs) / 1000;
+  state.lastTs = ts; if(dt > 0.25) dt = 0.25;
+  state.t += dt;
+  if(state.t >= TOTAL_TIME){ state.t = TOTAL_TIME; render(); timeUp(); return; }
+  render(); checkSteps();
+  state.rafId = requestAnimationFrame(loop);
+}
+
+function render(){
+  const t = state.t; const remain = Math.ceil(TOTAL_TIME - t);
+  timerNum.textContent = toFa(remain);
+  ringFg.style.strokeDashoffset = CIRC * (t / TOTAL_TIME);
+  let zone;
+  if(t < 10) zone = 'z1'; else if(t < 50) zone = 'z2'; else zone = 'z3';
+  if(zone !== state.zone) updateZone(zone);
+  if(zone === 'z3' && remain <= 10 && remain !== state.lastTick && remain > 0){
+    state.lastTick = remain; SFX.tick();
+  }
+}
+function updateZone(z){
+  state.zone = z;
+  const colors = { z1:'#22e58a', z2:'#3ee7ff', z3:'#ff3b6b' };
+  ringFg.style.stroke = colors[z];
+  timerNum.classList.toggle('danger', z === 'z3');
+}
+function checkSteps(){
+  const q = QUESTIONS[state.qi];
+  q.steps.forEach((s, i) => {
+    if(!state.shown[i] && state.t >= s.at){ state.shown[i] = true; addStep(s, i); }
+  });
+  if(!state.revealed && state.t >= 52){ state.revealed = true; revealAnswer(); }
+}
+function addStep(s, idx){
+  const el = document.createElement('div');
+  el.className = 'step'; el.dataset.num = toFa(idx + 1);
+  el.innerHTML = `<div class="step-body"><div class="step-title">${s.title}</div><div class="step-text">${s.text}</div></div>`;
+  stepsEl.appendChild(el); SFX.step();
+  setTimeout(() => { stageEl.scrollTo({ top: stageEl.scrollHeight, behavior: 'smooth' }); }, 80);
+}
+function revealAnswer(){
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach((o, i) => { if(i === q.correct) o.classList.add('reveal'); else o.classList.add('faded'); });
+  SFX.reveal();
+}
+function choose(idx, btn){
+  if(state.answered || state.locked) return;
+  state.answered = true; state.running = false;
+  cancelAnimationFrame(state.rafId);
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  const isCorrect = idx === q.correct;
+  opts.forEach(o => o.classList.add('done'));
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  if(isCorrect){
+    btn.classList.add('correct'); state.correctCount++;
+    let gain = 0;
+    if(state.t < 10) gain = 20; else if(state.t < 50) gain = 10; else gain = 0;
+    if(gain > 0){
+      if(gain === 20) state.fastCount++;
+      state.coins += gain; coinVal.textContent = toFa(state.coins);
+      coinBox.classList.remove('bump'); void coinBox.offsetWidth;
+      coinBox.classList.add('bump'); SFX.coin();
+      setTimeout(() => SFX.coin(), 130);
+      floatText(cx, cy, '+' + toFa(gain), '#ffd24a');
+    } else { floatText(cx, cy, '+۰', '#ff3b6b'); }
+    SFX.correct(); burst(cx, cy, ['#22e58a','#3ee7ff','#ffd24a','#a06bff']);
+    ripple(cx, cy, '#22e58a'); fastForwardSteps();
+  } else {
+    btn.classList.add('wrong'); SFX.wrong();
+    burst(cx, cy, ['#ff3b6b','#ff7a9c','#ffd24a']);
+    ripple(cx, cy, '#ff3b6b');
+    opts[q.correct].classList.add('correct'); fastForwardSteps();
+  }
+  setTimeout(nextQuestion, isCorrect ? 1900 : 2400);
+}
+function fastForwardSteps(){
+  const q = QUESTIONS[state.qi];
+  const pending = q.steps.filter((s, i) => !state.shown[i]);
+  pending.forEach((s, k) => {
+    const idx = q.steps.indexOf(s); state.shown[idx] = true;
+    setTimeout(() => addStep(s, idx), 320 + k * 480);
+  });
+}
+function timeUp(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  if(state.answered) return; state.answered = true;
+  const q = QUESTIONS[state.qi];
+  const opts = optionsEl.querySelectorAll('.opt');
+  opts.forEach(o => o.classList.add('done'));
+  opts[q.correct].classList.add('correct');
+  opts.forEach((o, i) => { if(i !== q.correct) o.classList.add('faded'); });
+  SFX.wrong();
+  const r = opts[q.correct].getBoundingClientRect();
+  burst(r.left + r.width/2, r.top + r.height/2, ['#ffd24a','#ff3b6b','#3ee7ff']);
+  fastForwardSteps(); setTimeout(nextQuestion, 2200);
+}
+function nextQuestion(){
+  state.qi++;
+  if(state.qi >= QUESTIONS.length){ endGame(); return; }
+  loadQuestion();
+}
+let coinsSentToFlutter = false;
+function sendCoinsToFlutter(){
+  if(coinsSentToFlutter) return;
+  coinsSentToFlutter = true;
+  const finalCoins = (typeof state !== 'undefined' && state.coins) ? state.coins : 0;
+  if(typeof CoinChannel !== 'undefined'){
+    CoinChannel.postMessage(String(finalCoins));
+  } else if(window.CoinChannel){
+    window.CoinChannel.postMessage(String(finalCoins));
+  }
+}
+function returnToHomeScreen(){
+  sendCoinsToFlutter();
+  if(typeof HomeChannel !== 'undefined'){
+    HomeChannel.postMessage('goHome');
+  } else if(window.HomeChannel){
+    window.HomeChannel.postMessage('goHome');
+  }
+}
+
+function endGame(){
+  state.running = false; cancelAnimationFrame(state.rafId);
+  gameScreen.classList.remove('active'); endScreen.classList.add('active');
+  SFX.end();
+  $('endCoins').textContent = toFa(state.coins);
+  sendCoinsToFlutter();
+  $('stCorrect').textContent = toFa(state.correctCount) + ' / ' + toFa(QUESTIONS.length);
+  $('stFast').textContent = toFa(state.fastCount);
+  $('stTotal').textContent = toFa(QUESTIONS.length);
+  let rank, emoji, color;
+  if(state.coins >= 130){ rank = 'افسانه‌ی ریاضی'; emoji = '👑'; color = '#ffd24a'; }
+  else if(state.coins >= 100){ rank = 'نابغه'; emoji = '🧠'; color = '#3ee7ff'; }
+  else if(state.coins >= 70){ rank = 'حرفه‌ای'; emoji = '🏆'; color = '#22e58a'; }
+  else if(state.coins >= 40){ rank = 'خوب'; emoji = '⭐'; color = '#a06bff'; }
+  else { rank = 'تازه‌کار'; emoji = '🌱'; color = '#8ea3c9'; }
+  $('endEmoji').textContent = emoji; $('endRank').textContent = rank;
+  $('endRank').style.color = color; $('endCoins').style.color = color;
+  $('endCoins').style.textShadow = '0 0 36px ' + color + 'aa';
+  let n = 0;
+  const iv = setInterval(() => {
+    burst(Math.random() * window.innerWidth, Math.random() * window.innerHeight * 0.6,
+      ['#ffd24a','#3ee7ff','#22e58a','#a06bff','#ff3b6b']);
+    if(++n > 5) clearInterval(iv);
+  }, 220);
+}
+
+document.addEventListener('keydown', e => {
+  if(!gameScreen.classList.contains('active')) return;
+  const map = { '1':0, '2':1, '3':2, '4':3, '۱':0, '۲':1, '۳':2, '۴':3 };
+  if(e.key in map){
+    const btn = optionsEl.querySelectorAll('.opt')[map[e.key]];
+    if(btn && !state.answered) btn.click();
+  }
+});
+
+let lastTouch = 0;
+document.addEventListener('touchend', e => {
+  const now = Date.now();
+  if(now - lastTouch < 300) e.preventDefault();
+  lastTouch = now;
+}, { passive:false });
+
+document.addEventListener('touchstart', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+document.addEventListener('click', () => { const c = ac(); if(c && c.state === 'suspended') c.resume(); }, { once:true });
+
+window.addEventListener('load', () => {
+  resetGame();
+  const btn = document.getElementById('btnRestart') || document.getElementById('btnHome');
+  if(btn){
+    btn.addEventListener('click', returnToHomeScreen);
+  }
+});
+</script>
+</body>
+</html>

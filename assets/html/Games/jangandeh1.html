@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#04121a">
+<title>نبرد هوایی — Air Combat</title>
+<style>
+/* ✏️ تغییر ۱: فونت‌های لوکال جایگزین Google Fonts شد */
+@font-face{font-family:'Vazirmatn';src:url('Vazirmatn-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap;}
+@font-face{font-family:'Vazirmatn';src:url('Vazirmatn-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap;}
+@font-face{font-family:'Vazirmatn';src:url('Vazirmatn-Black.ttf') format('truetype');font-weight:900;font-style:normal;font-display:swap;}
+</style>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;background:#04121a;font-family:'Vazirmatn',Tahoma,sans-serif;
+  user-select:none;-webkit-user-select:none;touch-action:none;overscroll-behavior:none;}
+#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;}
+#hud{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:10;}
+
+.vignette{position:absolute;inset:0;
+  background:radial-gradient(ellipse 78% 68% at 50% 48%,transparent 38%,rgba(0,8,12,.5) 82%,rgba(0,4,7,.92) 100%);}
+.glare{position:absolute;inset:0;
+  background:linear-gradient(118deg,rgba(160,225,255,.07) 0%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 72%,rgba(120,200,255,.05) 100%);}
+
+.question-panel{position:absolute;top:56px;left:50%;transform:translateX(-50%);
+  padding:9px 16px 11px;border-radius:14px;text-align:center;
+  width:min(94vw, 580px);
+  background:linear-gradient(180deg,rgba(0,40,30,.82),rgba(0,18,14,.66));
+  border:1.5px solid rgba(0,255,170,.5);
+  box-shadow:0 0 26px rgba(0,255,170,.28),inset 0 0 22px rgba(0,255,170,.1);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+.q-sub{font-size:9px;letter-spacing:.8px;color:rgba(140,255,215,.8);margin-bottom:4px;}
+.q-sub b{color:#ffd23c;font-weight:900;text-shadow:0 0 8px rgba(255,210,60,.85);}
+.q-title{font-size:14px;font-weight:900;color:#eafff8;line-height:1.4;
+  text-shadow:0 0 12px rgba(0,255,170,.75);
+  padding-bottom:7px;margin-bottom:7px;
+  border-bottom:1px solid rgba(0,255,170,.18);}
+.q-options{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;}
+.q-opt{position:relative;display:flex;align-items:center;gap:7px;justify-content:flex-start;
+  padding:5px 9px 5px 26px;border-radius:9px;
+  background:linear-gradient(180deg,rgba(0,45,34,.55),rgba(0,22,16,.5));
+  border:1px solid rgba(0,255,170,.22);
+  font-size:12.5px;color:#dfffee;line-height:1.3;
+  text-align:right;transition:all .25s ease;}
+.q-opt .opt-num{font-weight:900;color:#ffd23c;font-size:13px;min-width:14px;
+  text-shadow:0 0 8px rgba(255,210,60,.85);}
+
+.q-opt .mark{position:absolute;left:7px;top:50%;transform:translateY(-50%);
+  font-weight:900;font-size:18px;line-height:1;opacity:0;
+  animation:popMark .3s ease-out forwards;}
+@keyframes popMark{
+  0%{opacity:0;transform:translateY(-50%) scale(.3);}
+  60%{opacity:1;transform:translateY(-50%) scale(1.25);}
+  100%{opacity:1;transform:translateY(-50%) scale(1);}
+}
+.q-opt .mark.correct{color:#00ffa2;text-shadow:0 0 12px rgba(0,255,162,1),0 0 4px rgba(0,255,162,1);}
+.q-opt .mark.wrong{color:#ff4444;text-shadow:0 0 12px rgba(255,68,68,1),0 0 4px rgba(255,68,68,1);}
+
+.q-opt.correct{
+  border-color:rgba(0,255,162,.8);
+  background:linear-gradient(180deg,rgba(0,90,60,.75),rgba(0,45,32,.68));
+  box-shadow:0 0 16px rgba(0,255,162,.5),inset 0 0 12px rgba(0,255,162,.22);
+}
+.q-opt.wrong{
+  border-color:rgba(255,68,68,.75);
+  background:linear-gradient(180deg,rgba(95,15,15,.65),rgba(50,0,0,.58));
+  box-shadow:0 0 14px rgba(255,68,68,.45),inset 0 0 10px rgba(255,68,68,.18);
+}
+.q-opt.correct .opt-num{color:#00ffa2;text-shadow:0 0 8px rgba(0,255,162,.9);}
+.q-opt.wrong .opt-num{color:#ff6868;text-shadow:0 0 8px rgba(255,68,68,.9);}
+
+.coins{position:absolute;top:10px;left:10px;display:flex;align-items:center;gap:5px;
+  padding:6px 11px;border-radius:11px;background:rgba(0,25,18,.6);
+  border:1.5px solid rgba(255,208,64,.5);box-shadow:0 0 16px rgba(255,200,50,.25);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);}
+.coin-ico{width:17px;height:17px;fill:none;stroke:#ffd23c;stroke-width:2;
+  filter:drop-shadow(0 0 5px rgba(255,210,60,.9));}
+#coin-val{font-size:15px;font-weight:900;color:#ffe27a;text-shadow:0 0 10px rgba(255,200,50,.8);}
+
+.crosshair{position:absolute;left:50%;top:50%;width:min(38vw,175px);height:min(38vw,175px);
+  transform:translate(-50%,-50%);}
+.crosshair svg{width:100%;height:100%;overflow:visible;}
+.ch-track{fill:none;stroke:rgba(0,255,160,.22);stroke-width:2;}
+.ch-fill{fill:none;stroke:#00ffa2;stroke-width:4.5;stroke-linecap:round;
+  stroke-dasharray:452.4;stroke-dashoffset:452.4;transform:rotate(-90deg);transform-origin:100px 100px;
+  filter:drop-shadow(0 0 6px #00ffa2);transition:stroke .15s;}
+.ch-tick{stroke:rgba(0,255,160,.8);stroke-width:2.5;filter:drop-shadow(0 0 4px rgba(0,255,160,.9));}
+.ch-dot{fill:#00ffa2;filter:drop-shadow(0 0 5px #00ffa2);}
+.ch-corner{fill:none;stroke:rgba(0,255,160,.55);stroke-width:2;}
+.crosshair.locked .ch-fill{stroke:#ff2d2d;filter:drop-shadow(0 0 12px #ff2d2d);}
+.crosshair.locked .ch-tick{stroke:#ff3b3b;filter:drop-shadow(0 0 7px #ff2d2d);}
+.crosshair.locked .ch-dot{fill:#ff2d2d;filter:drop-shadow(0 0 8px #ff2d2d);}
+.crosshair.locked{animation:lockShake .12s infinite;}
+@keyframes lockShake{0%,100%{transform:translate(-50%,-50%) scale(1.045);}
+  50%{transform:translate(-50%,-50%) scale(1.03);}}
+
+.lock-text{position:absolute;left:50%;top:calc(50% + min(22vw,100px));transform:translateX(-50%);
+  font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(0,255,170,.85);
+  text-shadow:0 0 10px rgba(0,255,170,.7);white-space:nowrap;}
+.lock-text.locked{color:#ff4444;text-shadow:0 0 14px rgba(255,60,60,.95);
+  animation:blink .5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+
+.throttle{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;
+  align-items:center;gap:9px;pointer-events:auto;}
+.thr-btn{width:52px;height:52px;border-radius:15px;border:1.5px solid rgba(0,255,170,.45);
+  background:linear-gradient(180deg,rgba(0,50,38,.65),rgba(0,20,15,.55));
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 0 15px rgba(0,255,170,.15),inset 0 0 12px rgba(0,255,170,.06);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);transition:.12s;touch-action:none;}
+.thr-btn:active{background:linear-gradient(180deg,rgba(0,255,170,.4),rgba(0,120,90,.3));
+  box-shadow:0 0 26px rgba(0,255,170,.6);transform:scale(.94);}
+.thr-btn svg{width:26px;height:26px;fill:none;stroke:#00ffa2;stroke-width:2.6;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 5px rgba(0,255,170,.9));}
+.thr-bar{width:9px;height:78px;border-radius:6px;background:rgba(0,30,22,.65);
+  border:1px solid rgba(0,255,170,.3);overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;}
+.thr-fill{width:100%;height:50%;border-radius:5px;
+  background:linear-gradient(to top,#00ffa2,#7cffcf);
+  box-shadow:0 0 12px rgba(0,255,170,.9);transition:height .08s linear;}
+
+.fire-btn{position:absolute;right:14px;bottom:20px;
+  width:96px;height:96px;border-radius:50%;pointer-events:auto;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;touch-action:none;
+  background:radial-gradient(circle at 34% 28%,rgba(0,90,65,.55),rgba(0,22,17,.72));
+  border:2px solid rgba(0,255,170,.4);
+  box-shadow:0 0 20px rgba(0,255,170,.15),inset 0 0 22px rgba(0,255,170,.08);
+  backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);transition:.18s;}
+.fire-btn svg{width:44%;height:44%;fill:rgba(0,255,170,.55);transition:.18s;
+  filter:drop-shadow(0 0 6px rgba(0,255,170,.5));}
+.fire-btn::after{content:'';position:absolute;inset:-7px;border-radius:50%;
+  border:2px dashed rgba(0,255,170,.55);opacity:0;transition:.25s;}
+.fire-btn.ready{border-color:#ff2d2d;
+  background:radial-gradient(circle at 34% 28%,rgba(160,20,20,.6),rgba(45,0,0,.75));
+  box-shadow:0 0 34px rgba(255,45,45,.75),inset 0 0 26px rgba(255,45,45,.28);
+  animation:firePulse .7s infinite;}
+.fire-btn.ready svg{fill:#ff5f5f;filter:drop-shadow(0 0 9px rgba(255,60,60,.95));}
+.fire-btn.ready::after{opacity:1;border-color:rgba(255,60,60,.85);
+  animation:spinRing 2.4s linear infinite;}
+.fire-btn:active{transform:scale(.9);}
+@keyframes firePulse{0%,100%{box-shadow:0 0 26px rgba(255,45,45,.6),inset 0 0 20px rgba(255,45,45,.2);}
+  50%{box-shadow:0 0 48px rgba(255,45,45,1),inset 0 0 32px rgba(255,45,45,.4);}}
+@keyframes spinRing{to{transform:rotate(360deg);}}
+
+.speed-box{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+  text-align:center;font-family:'Vazirmatn',monospace;}
+.speed-box .num{font-size:20px;font-weight:900;color:#00ffa2;
+  text-shadow:0 0 12px rgba(0,255,170,.85);line-height:1;}
+.speed-box .unit{font-size:9px;color:rgba(140,255,215,.6);letter-spacing:1px;}
+
+.toast{position:absolute;left:50%;top:56%;transform:translate(-50%,10px) scale(.85);
+  opacity:0;font-size:17px;font-weight:900;color:#00ffa2;white-space:nowrap;
+  text-shadow:0 0 22px rgba(0,255,170,.95);transition:.28s cubic-bezier(.2,1.4,.5,1);
+  padding:8px 16px;border-radius:12px;
+  background:rgba(0,30,22,.65);border:1px solid rgba(0,255,170,.4);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+.toast.show{opacity:1;transform:translate(-50%,0) scale(1);}
+.toast.bad{color:#ff5252;border-color:rgba(255,82,82,.55);
+  text-shadow:0 0 22px rgba(255,70,70,.95);
+  background:rgba(40,0,0,.7);}
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+
+<div id="hud">
+  <div class="vignette"></div>
+  <div class="glare"></div>
+
+  <div class="question-panel">
+    <div class="q-sub">هدفِ درست را قفل کن — پاداش <b id="reward-txt">۱۰</b> سکه</div>
+    <div class="q-title" id="q-text">در حال بارگذاری…</div>
+    <div class="q-options" id="q-options"></div>
+  </div>
+
+  <div class="coins">
+    <svg class="coin-ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 10h5M9.5 14h5"/></svg>
+    <span id="coin-val">۰</span>
+  </div>
+
+  <div class="crosshair" id="crosshair">
+    <svg viewBox="0 0 200 200">
+      <circle class="ch-track" cx="100" cy="100" r="72"/>
+      <circle class="ch-fill" id="ch-fill" cx="100" cy="100" r="72"/>
+      <path class="ch-corner" d="M28 52 L28 28 L52 28"/>
+      <path class="ch-corner" d="M172 52 L172 28 L148 28"/>
+      <path class="ch-corner" d="M28 148 L28 172 L52 172"/>
+      <path class="ch-corner" d="M172 148 L172 172 L148 172"/>
+      <line class="ch-tick" x1="100" y1="14" x2="100" y2="34"/>
+      <line class="ch-tick" x1="100" y1="166" x2="100" y2="186"/>
+      <line class="ch-tick" x1="14" y1="100" x2="34" y2="100"/>
+      <line class="ch-tick" x1="166" y1="100" x2="186" y2="100"/>
+      <circle class="ch-dot" cx="100" cy="100" r="2.6"/>
+    </svg>
+  </div>
+  <div class="lock-text" id="lock-text">در جستجوی هدف…</div>
+
+  <div class="throttle">
+    <button class="thr-btn" id="thr-up">
+      <svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/><path d="M6 20l6-6 6 6" opacity=".55"/></svg>
+    </button>
+    <div class="thr-bar"><div class="thr-fill" id="thr-fill"></div></div>
+    <button class="thr-btn" id="thr-down">
+      <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/><path d="M6 4l6 6 6-6" opacity=".55"/></svg>
+    </button>
+  </div>
+
+  <div class="speed-box">
+    <div class="num" id="speed-num">۸۰۰</div>
+    <div class="unit">KM/H</div>
+  </div>
+
+  <button class="fire-btn" id="fire-btn">
+    <svg viewBox="0 0 24 24">
+      <path d="M12 1.6c2.2 1.9 3.5 4.8 3.5 7.9v3.3l3.5 2.4v1.7l-3.5-1.1v3l1.6 2.3v1.3L12 21l-5.1 1.4v-1.3l1.6-2.3v-3L5 16.9v-1.7l3.5-2.4V9.5c0-3.1 1.3-6 3.5-7.9z"/>
+    </svg>
+  </button>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="./three.min.js"></script>
+<script>
+
+const FA = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+const toFa = v => String(v).replace(/\d/g, d => FA[+d]);
+const rand = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => v < a ? a : (v > b ? b : v);
+const lerp = (a,b,t) => a + (b-a)*t;
+
+function fixHalfSpace(obj) {
+  if (typeof obj === 'string') {
+    let s = obj.replace(/[\u200C\u200D\u200E\u200F\uFEFF\u200B]/g, ' ');
+    s = s.replace(/زمینگرمایی/g, 'زمین گرمایی');
+    s = s.replace(/زغالسنگ/g, 'زغال سنگ');
+    s = s.replace(/تجدیدناپذیر/g, 'تجدید ناپذیر');
+    s = s.replace(/تجدیدپذیر/g, 'تجدید پذیر');
+    s = s.replace(/سوختهای/g, 'سوخت های');
+    s = s.replace(/یاختههای/g, 'یاخته های');
+    s = s.replace(/شدهاند/g, 'شده اند');
+    s = s.replace(/میباشند/g, 'می باشند');
+    s = s.replace(/میشوند/g, 'می شوند');
+    s = s.replace(/میشود/g, 'می شود');
+    s = s.replace(/  +/g, ' ');
+    return s.trim();
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(fixHalfSpace);
+  }
+  if (obj && typeof obj === 'object' && obj !== null) {
+    const res = {};
+    for (let key in obj) {
+      res[key] = fixHalfSpace(obj[key]);
+    }
+    return res;
+  }
+  return obj;
+}
+
+let QUESTIONS = [];
+window.setGameQuestions = function(qList) {
+  if (qList && qList.length > 0) {
+    QUESTIONS = fixHalfSpace(qList);
+    if (typeof newQuestion === 'function') newQuestion();
+    else if (typeof nextQuestion === 'function') nextQuestion();
+  }
+};
+
+let AC = null;
+function audioCtx(){
+  if(!AC){ try{ AC = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} }
+  if(AC && AC.state === 'suspended') AC.resume();
+  return AC;
+}
+function beep(freq=880, dur=0.09, type='square', vol=0.05){
+  const ac = audioCtx(); if(!ac) return;
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, ac.currentTime);
+  g.gain.setValueAtTime(vol, ac.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+  o.connect(g); g.connect(ac.destination);
+  o.start(); o.stop(ac.currentTime + dur + 0.02);
+}
+function noiseBurst(dur=0.6, vol=0.25, cutoff=500){
+  const ac = audioCtx(); if(!ac) return;
+  const len = Math.max(1, Math.floor(ac.sampleRate * dur));
+  const buf = ac.createBuffer(1, len, ac.sampleRate);
+  const d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 2);
+  const src = ac.createBufferSource(); src.buffer = buf;
+  const f = ac.createBiquadFilter(); f.type='lowpass'; f.frequency.value = cutoff;
+  const g = ac.createGain(); g.gain.value = vol;
+  src.connect(f); f.connect(g); g.connect(ac.destination);
+  src.start();
+}
+function chime(){
+  beep(1046,0.09,'sine',0.06);
+  setTimeout(()=>beep(1318,0.09,'sine',0.06),80);
+  setTimeout(()=>beep(1568,0.16,'sine',0.06),160);
+}
+function vibrate(ms){ if(navigator.vibrate) try{navigator.vibrate(ms);}catch(e){} }
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, powerPreference:'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(innerWidth, innerHeight);
+if ('outputColorSpace' in renderer && THREE.SRGBColorSpace) { renderer.outputColorSpace = THREE.SRGBColorSpace; } else if ('outputEncoding' in renderer && THREE.sRGBEncoding) { renderer.outputEncoding = THREE.sRGBEncoding; }
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x9ecbe8, 260, 1500);
+
+const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.5, 5000);
+camera.position.set(0,0,0);
+
+const skyMat = new THREE.ShaderMaterial({
+  side: THREE.BackSide, depthWrite:false,
+  uniforms:{
+    top:    { value: new THREE.Color(0x1857a8) },
+    mid:    { value: new THREE.Color(0x63aede) },
+    bottom: { value: new THREE.Color(0xd6ecfb) }
+  },
+  vertexShader:`
+    varying vec3 vPos;
+    void main(){
+      vPos = position;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);
+    }`,
+  fragmentShader:`
+    uniform vec3 top; uniform vec3 mid; uniform vec3 bottom;
+    varying vec3 vPos;
+    void main(){
+      float h = normalize(vPos).y;
+      vec3 c = mix(bottom, mid, smoothstep(-0.05, 0.28, h));
+      c = mix(c, top, smoothstep(0.22, 0.85, h));
+      gl_FragColor = vec4(c, 1.0);
+    }`
+});
+const sky = new THREE.Mesh(new THREE.SphereGeometry(2400, 32, 18), skyMat);
+sky.frustumCulled = false;
+scene.add(sky);
+
+scene.add(new THREE.HemisphereLight(0xcfe8ff, 0x506070, 1.05));
+const sun = new THREE.DirectionalLight(0xfff2d0, 1.5);
+sun.position.set(0.6, 1, 0.4).multiplyScalar(400);
+scene.add(sun);
+
+function makeCloudTexture(){
+  const S = 160;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  g.addColorStop(0,   'rgba(255,255,255,1)');
+  g.addColorStop(0.30,'rgba(255,255,255,0.82)');
+  g.addColorStop(0.60,'rgba(240,248,255,0.35)');
+  g.addColorStop(1,   'rgba(255,255,255,0)');
+  x.fillStyle = g; x.fillRect(0,0,S,S);
+  const t = new THREE.CanvasTexture(c);
+  if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace; else if (THREE.sRGBEncoding) t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+function makeGlowTexture(){
+  const S = 128;
+  const c = document.createElement('canvas'); c.width = c.height = S;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  g.addColorStop(0,   'rgba(255,255,255,1)');
+  g.addColorStop(0.25,'rgba(255,235,150,0.85)');
+  g.addColorStop(0.55,'rgba(255,140,40,0.35)');
+  g.addColorStop(1,   'rgba(255,80,0,0)');
+  x.fillStyle = g; x.fillRect(0,0,S,S);
+  const t = new THREE.CanvasTexture(c);
+  if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace; else if (THREE.sRGBEncoding) t.encoding = THREE.sRGBEncoding;
+  return t;
+}
+const cloudTex = makeCloudTexture();
+const glowTex  = makeGlowTexture();
+
+const clouds = [];
+const cloudMat = new THREE.SpriteMaterial({
+  map: cloudTex, transparent:true, depthWrite:false,
+  opacity:0.85, fog:true
+});
+for(let i=0;i<110;i++){
+  const sp = new THREE.Sprite(cloudMat.clone());
+  const s = rand(50, 190);
+  sp.scale.set(s, s*rand(0.55,0.85), 1);
+  sp.material.opacity = rand(0.35, 0.9);
+  sp.position.set(rand(-700,700), rand(-190,230), rand(-1500, 120));
+  scene.add(sp);
+  clouds.push(sp);
+}
+
+function createJetModel(){
+  const g = new THREE.Group();
+
+  const bodyMat  = new THREE.MeshStandardMaterial({ color:0x39424f, metalness:0.78, roughness:0.34 });
+  const darkMat  = new THREE.MeshStandardMaterial({ color:0x141a21, metalness:0.85, roughness:0.42 });
+  const accentMat= new THREE.MeshStandardMaterial({ color:0xb0231f, metalness:0.6,  roughness:0.45 });
+  const glassMat = new THREE.MeshStandardMaterial({ color:0x7fe6ff, metalness:1, roughness:0.05,
+                       transparent:true, opacity:0.85, emissive:0x0b3346 });
+
+  const fus = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.95, 8, 10), bodyMat);
+  fus.rotation.x = Math.PI/2;
+  g.add(fus);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.72, 3.2, 10), bodyMat);
+  nose.rotation.x = Math.PI/2;
+  nose.position.z = 5.4;
+  g.add(nose);
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.14, 1.1, 6), darkMat);
+  tip.rotation.x = Math.PI/2;
+  tip.position.z = 7.4;
+  g.add(tip);
+  const wing = new THREE.Mesh(new THREE.BoxGeometry(13.5, 0.26, 3.8), bodyMat);
+  wing.position.set(0, -0.12, -0.7);
+  g.add(wing);
+  const wl = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.3, 1.1), accentMat);
+  wl.position.set(-6.2, -0.12, -1.9); g.add(wl);
+  const wr = wl.clone(); wr.position.x = 6.2; g.add(wr);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.22, 2.0), bodyMat);
+  tail.position.set(0, 0.05, -3.5);
+  g.add(tail);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.6, 2.4), bodyMat);
+  fin.position.set(0, 1.25, -3.3);
+  g.add(fin);
+  const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.72, 12, 10), glassMat);
+  canopy.scale.set(1, 0.78, 2.3);
+  canopy.position.set(0, 0.62, 1.7);
+  g.add(canopy);
+  const noz = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, 1.1, 10), darkMat);
+  noz.rotation.x = Math.PI/2;
+  noz.position.z = -4.2;
+  g.add(noz);
+  const flame = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color: 0xff9a2e, transparent:true,
+    blending: THREE.AdditiveBlending, depthWrite:false, opacity:0.95
+  }));
+  flame.scale.set(3.4, 3.4, 1);
+  flame.position.set(0, 0, -5.2);
+  g.add(flame);
+  g.userData.flame = flame;
+
+  return g;
+}
+
+function createLabel(){
+  const S = 256;
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = S;
+  const ctx = cv.getContext('2d');
+  const tex = new THREE.CanvasTexture(cv);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace; else if (THREE.sRGBEncoding) tex.encoding = THREE.sRGBEncoding;
+  const mat = new THREE.SpriteMaterial({
+    map: tex, transparent:true, depthTest:false, depthWrite:false
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(13, 13, 1);
+  sprite.renderOrder = 30;
+  return { sprite, ctx, tex, S, current:null, highlight:false };
+}
+
+function drawLabel(label, text, highlight){
+  const { ctx, S } = label;
+  const col = highlight ? '#ff3b30' : '#00ffa2';
+  const glow = highlight ? 'rgba(255,59,48,.95)' : 'rgba(0,255,162,.9)';
+
+  ctx.clearRect(0,0,S,S);
+
+  const rg = ctx.createRadialGradient(S/2,S/2,40,S/2,S/2,118);
+  rg.addColorStop(0, highlight ? 'rgba(255,40,40,.4)' : 'rgba(0,255,160,.32)');
+  rg.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = rg;
+  ctx.beginPath(); ctx.arc(S/2,S/2,120,0,Math.PI*2); ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 92, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,16,12,.68)';
+  ctx.fill();
+  ctx.lineWidth = 11;
+  ctx.strokeStyle = col;
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = 34;
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  ctx.beginPath();
+  ctx.arc(S/2, S/2, 76, 0, Math.PI*2);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = highlight ? 'rgba(255,90,90,.7)' : 'rgba(0,255,162,.5)';
+  ctx.stroke();
+
+  ctx.font = '900 148px Vazirmatn, Tahoma, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f2fffb';
+  ctx.shadowColor = glow;
+  ctx.shadowBlur = 38;
+  ctx.fillText(text, S/2, S/2 + 8);
+  ctx.shadowBlur = 0;
+
+  label.tex.needsUpdate = true;
+  label.current = text;
+  label.highlight = highlight;
+}
+
+const ENEMY_BOUNDS = { x: 72, y: 46, zMin: -330, zMax: -95 };
+const enemies = [];
+
+for(let i=0;i<4;i++){
+  const group = createJetModel();
+  scene.add(group);
+  const label = createLabel();
+  scene.add(label.sprite);
+
+  enemies.push({
+    group, label,
+    optionIndex: i,
+    vel: new THREE.Vector3(0,0,-1),
+    target: new THREE.Vector3(),
+    timer: 0,
+    speed: rand(20, 30),
+    phase: rand(0, Math.PI*2),
+    bank: 0,
+    alive: true,
+    respawnTimer: 0,
+  });
+}
+
+function respawnEnemy(e){
+  e.group.position.set(
+    rand(-ENEMY_BOUNDS.x, ENEMY_BOUNDS.x),
+    rand(-ENEMY_BOUNDS.y, ENEMY_BOUNDS.y),
+    rand(ENEMY_BOUNDS.zMin, ENEMY_BOUNDS.zMax)
+  );
+  e.vel.set(rand(-1,1), rand(-0.4,0.4), rand(-1,1)).normalize().multiplyScalar(e.speed);
+  e.target.set(
+    rand(-ENEMY_BOUNDS.x, ENEMY_BOUNDS.x),
+    rand(-ENEMY_BOUNDS.y, ENEMY_BOUNDS.y),
+    rand(ENEMY_BOUNDS.zMin, ENEMY_BOUNDS.zMax)
+  );
+  e.timer = rand(2, 4);
+  e.alive = true;
+  e.respawnTimer = 0;
+  e.bank = 0;
+  e.group.visible = true;
+  e.group.scale.setScalar(1);
+  e.label.sprite.visible = true;
+}
+
+function updateEnemy(e, dt){
+  if(!e.alive) return;
+  const p = e.group.position;
+  const th = GAME.throttle;
+
+  const extra = Math.max(0, th - 0.5) * 2;
+  const spdScale = 0.5 + th * 1.5 + extra * 0.6;
+  const effSpeed = e.speed * spdScale;
+  const turnRate = 0.8 + th * 1.7 + extra * 0.9;
+
+  const bx = ENEMY_BOUNDS.x + th * 25;
+  const by = ENEMY_BOUNDS.y + th * 18;
+
+  e.timer -= dt;
+  if(e.timer <= 0 || p.distanceTo(e.target) < 18){
+    e.target.set(
+      rand(-bx, bx),
+      rand(-by, by),
+      rand(ENEMY_BOUNDS.zMin, ENEMY_BOUNDS.zMax)
+    );
+    e.timer = rand(2.0, 4.0) / (0.75 + th * 0.7 + extra * 0.5);
+  }
+
+  const oldVel = e.vel.clone();
+  const desired = e.target.clone().sub(p);
+  const dist = desired.length();
+  desired.normalize().multiplyScalar(effSpeed * (0.55 + 0.75 * Math.min(1, dist/140)));
+  e.vel.lerp(desired, Math.min(1, dt * turnRate));
+
+  const sp = e.vel.length();
+  if(sp > effSpeed * 1.35) e.vel.setLength(effSpeed * 1.35);
+  if(sp < effSpeed * 0.35) e.vel.setLength(effSpeed * 0.35);
+
+  p.addScaledVector(e.vel, dt);
+  e.group.lookAt(p.x + e.vel.x, p.y + e.vel.y, p.z + e.vel.z);
+
+  const acc = e.vel.clone().sub(oldVel).divideScalar(Math.max(dt, 0.0001));
+  const right = new THREE.Vector3(1,0,0).applyQuaternion(e.group.quaternion);
+  const latAcc = acc.dot(right);
+  const bankTarget = clamp(-latAcc * 0.05, -1.2, 1.2);
+  e.bank = lerp(e.bank, bankTarget, Math.min(1, dt * 5.0));
+  e.group.rotateZ(e.bank);
+
+  const flame = e.group.userData.flame;
+  const flick = 0.85 + Math.sin(performance.now()*0.03 + e.phase*10) * 0.15;
+  const fs = (3.4 + GAME.throttle * 1.5) * flick;
+  flame.scale.set(fs, fs, 1);
+
+  e.label.sprite.position.set(p.x, p.y + 9.5, p.z);
+}
+
+const particles = [];
+function getParticle(){
+  for(let i=0;i<particles.length;i++){
+    if(!particles[i].active) return particles[i];
+  }
+  const mat = new THREE.SpriteMaterial({
+    map: cloudTex, transparent:true, depthWrite:false,
+    blending: THREE.AdditiveBlending
+  });
+  const sp = new THREE.Sprite(mat);
+  sp.visible = false;
+  scene.add(sp);
+  const p = { sprite: sp, active:false, vel: new THREE.Vector3(),
+    life:0, maxLife:1, size:1, growth:0, opacity:1, drag:0.9 };
+  particles.push(p);
+  return p;
+}
+function spawnParticle(pos, vel, size, growth, life, color, opacity, drag, blending){
+  const p = getParticle();
+  p.active = true; p.sprite.visible = true;
+  p.sprite.position.copy(pos); p.vel.copy(vel);
+  p.size = size; p.growth = growth;
+  p.life = p.maxLife = life; p.opacity = opacity; p.drag = drag;
+  p.sprite.material.color.setHex(color);
+  p.sprite.material.blending = blending !== undefined ? blending : THREE.AdditiveBlending;
+  p.sprite.material.opacity = opacity;
+  p.sprite.scale.setScalar(size);
+}
+function updateParticles(dt){
+  for(let i=0;i<particles.length;i++){
+    const p = particles[i];
+    if(!p.active) continue;
+    p.life -= dt;
+    if(p.life <= 0){ p.active = false; p.sprite.visible = false; continue; }
+    const t = p.life / p.maxLife;
+    p.vel.multiplyScalar(Math.pow(p.drag, dt*60));
+    p.sprite.position.addScaledVector(p.vel, dt);
+    p.sprite.scale.setScalar(p.size + p.growth * (1 - t));
+    p.sprite.material.opacity = p.opacity * t;
+  }
+}
+
+const FIRE_COLORS = [0xfff0a0, 0xffc44d, 0xff8a1f, 0xff4d10, 0xffffff];
+const SMOKE_COLORS = [0x552a10, 0x33200f, 0x222222];
+
+function explode(pos){
+  spawnParticle(pos, new THREE.Vector3(0,0,0), 6, 95, 0.26, 0xffffff, 1, 1);
+  for(let i=0;i<34;i++){
+    const dir = new THREE.Vector3(rand(-1,1), rand(-1,1), rand(-1,1)).normalize();
+    spawnParticle(pos, dir.multiplyScalar(rand(9, 62)),
+      rand(1.6, 6.5), rand(5, 20), rand(0.42, 1.15),
+      FIRE_COLORS[(Math.random()*FIRE_COLORS.length)|0], 1, 0.90);
+  }
+  for(let i=0;i<14;i++){
+    const dir = new THREE.Vector3(rand(-1,1), rand(-0.2,1), rand(-1,1)).normalize();
+    spawnParticle(pos, dir.multiplyScalar(rand(4, 22)),
+      rand(5, 12), rand(10, 26), rand(1.0, 1.9),
+      SMOKE_COLORS[(Math.random()*SMOKE_COLORS.length)|0], 0.55, 0.94,
+      THREE.NormalBlending);
+  }
+  for(let i=0;i<18;i++){
+    const dir = new THREE.Vector3(rand(-1,1), rand(-1,1), rand(-1,1)).normalize();
+    spawnParticle(pos, dir.multiplyScalar(rand(40, 130)),
+      rand(0.5, 1.6), rand(0, 3), rand(0.25, 0.55),
+      0xffe08a, 1, 0.86);
+  }
+  GAME.shake = 1;
+  noiseBurst(0.85, 0.34, 460);
+  beep(70, 0.55, 'sawtooth', 0.075);
+  vibrate([25, 40, 60]);
+}
+
+const missiles = [];
+
+function fireMissile(target){
+  const startPos = new THREE.Vector3(player.pos.x, player.pos.y - 2.4, -3.5);
+  const group = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color:0xe6e6e6, metalness:0.85, roughness:0.28, emissive:0x331100
+  });
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,3.2,8), bodyMat);
+  body.rotation.x = Math.PI/2;
+  group.add(body);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.32,1.2,8), bodyMat);
+  nose.rotation.x = Math.PI/2;
+  nose.position.z = 2.2;
+  group.add(nose);
+  const finG = new THREE.Mesh(new THREE.BoxGeometry(1.5,0.08,0.7), bodyMat);
+  finG.position.z = -1.4;
+  group.add(finG);
+  const flame = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: glowTex, color:0xffb03a, transparent:true,
+    blending: THREE.AdditiveBlending, depthWrite:false
+  }));
+  flame.scale.set(4.5,4.5,1);
+  flame.position.z = -2.6;
+  group.add(flame);
+  group.position.copy(startPos);
+  scene.add(group);
+
+  const dir = target.group.position.clone().sub(startPos).normalize();
+  missiles.push({ group, pos: startPos.clone(), dir, speed: 215, target, life: 0, trailT: 0, flame });
+
+  noiseBurst(0.35, 0.16, 1600);
+  beep(320, 0.14, 'sawtooth', 0.05);
+  vibrate(18);
+}
+
+function updateMissile(m, dt){
+  m.life += dt; m.trailT -= dt;
+  const targetAlive = m.target && m.target.alive;
+  const targetPos = targetAlive ? m.target.group.position : null;
+  if(targetPos){
+    const desired = targetPos.clone().sub(m.pos).normalize();
+    m.dir.lerp(desired, Math.min(1, dt * 5.2)).normalize();
+  }
+  m.pos.addScaledVector(m.dir, m.speed * dt);
+  m.group.position.copy(m.pos);
+  m.group.lookAt(m.pos.x + m.dir.x, m.pos.y + m.dir.y, m.pos.z + m.dir.z);
+  const flick = 0.85 + Math.random()*0.4;
+  m.flame.scale.set(4.5*flick, 4.5*flick, 1);
+  if(m.trailT <= 0){
+    m.trailT = 0.012;
+    spawnParticle(m.pos.clone().addScaledVector(m.dir, -1.6),
+      new THREE.Vector3(rand(-1.5,1.5), rand(-1.5,1.5), rand(-1.5,1.5)),
+      rand(1.1, 2.1), rand(3.5, 7), rand(0.4, 0.85),
+      0xdddddd, 0.55, 0.93, THREE.NormalBlending);
+    spawnParticle(m.pos.clone().addScaledVector(m.dir, -0.8),
+      new THREE.Vector3(rand(-1,1), rand(-1,1), rand(-1,1)),
+      rand(0.9, 1.8), rand(0.5, 2), 0.24, 0xffbb55, 0.9, 0.9);
+  }
+  if(targetPos && m.pos.distanceTo(targetPos) < 7.5){
+    explode(m.pos.clone());
+    destroyEnemy(m.target);
+    removeMissile(m);
+    return;
+  }
+  if(m.life > 5.5){
+    explode(m.pos.clone());
+    removeMissile(m);
+  }
+}
+function removeMissile(m){
+  scene.remove(m.group);
+  m.group.traverse(o => {
+    if(o.material){ o.material.dispose && o.material.dispose(); }
+    if(o.geometry){ o.geometry.dispose && o.geometry.dispose(); }
+  });
+  const i = missiles.indexOf(m);
+  if(i >= 0) missiles.splice(i, 1);
+}
+
+const GAME = {
+  coins: 0,
+  currentQuestion: null,
+  correctIndex: 0,
+  currentQIndex: 0,
+  lockedTarget: null,
+  lockProgress: 0,
+  lockNeed: 2,
+  isLocked: false,
+  fireCooldown: 0,
+  roundEndTimer: 0,
+  answerRevealed: false,
+  shake: 0,
+  throttle: 0.5,
+  throttleInput: 0,
+  running: true
+};
+
+let gameFinished = false;
+function showFinishModal(finalCoins){
+  if(gameFinished) return;
+  gameFinished = true;
+  GAME.running = false;
+  let actualCoins = 0;
+  if (typeof finalCoins !== 'undefined' && finalCoins >= 0) actualCoins = finalCoins;
+  else if (typeof GAME !== 'undefined' && typeof GAME.coins !== 'undefined') actualCoins = GAME.coins;
+
+  if (typeof CoinChannel !== 'undefined') {
+    CoinChannel.postMessage(String(actualCoins));
+  }
+}
+
+const BOUND_X = 68;
+const BOUND_Y = 44;
+const CAM_Y_OFFSET = 6;
+
+const player = {
+  pos: new THREE.Vector3(0,0,0),
+  target: new THREE.Vector3(0,0,0),
+  prevX: 0,
+  smoothVelX: 0
+};
+
+function lockTimeFor(){ return 2; }
+
+function lockRadiusFor(throttle){
+  const base = Math.min(innerWidth, innerHeight);
+  return base * (0.18 - throttle * 0.02);
+}
+
+function rewardFor(throttle){
+  const t = clamp((throttle - 0.5) / 0.5, 0, 1);
+  return Math.round(10 + 10 * t);
+}
+
+const UI = {
+  qTitle: document.getElementById('q-text'),
+  qOpts:  document.getElementById('q-options'),
+  reward: document.getElementById('reward-txt'),
+  coins:  document.getElementById('coin-val'),
+  cross:  document.getElementById('crosshair'),
+  ring:   document.getElementById('ch-fill'),
+  lockEl: document.getElementById('lock-text'),
+  fire:   document.getElementById('fire-btn'),
+  thrFill:document.getElementById('thr-fill'),
+  speed:  document.getElementById('speed-num'),
+  toast:  document.getElementById('toast')
+};
+
+const RING_C = 2 * Math.PI * 72;
+
+let toastTimer = null;
+function toast(msg, kind){
+  UI.toast.textContent = msg;
+  UI.toast.className = 'toast show' + (kind === 'bad' ? ' bad' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ UI.toast.classList.remove('show'); }, 2000);
+}
+
+function markOption(index, type){
+  const opts = UI.qOpts.querySelectorAll('.q-opt');
+  const el = opts[index];
+  if(!el) return;
+  if(el.querySelector('.mark')) return;
+
+  const mark = document.createElement('span');
+  mark.className = 'mark ' + (type === 'correct' ? 'correct' : 'wrong');
+  mark.textContent = type === 'correct' ? '✓' : '✗';
+  el.appendChild(mark);
+  el.classList.add(type === 'correct' ? 'correct' : 'wrong');
+}
+
+function newRound(){
+  if (gameFinished) return;
+  if (QUESTIONS.length > 0 && GAME.currentQIndex >= QUESTIONS.length) {
+    showFinishModal(GAME.coins);
+    return;
+  }
+  const question = fixHalfSpace(QUESTIONS[GAME.currentQIndex]);
+  GAME.currentQIndex++;
+  GAME.currentQuestion = question;
+  GAME.correctIndex = question.correct;
+
+  UI.qTitle.textContent = question.q;
+
+  UI.qOpts.innerHTML = '';
+  question.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'q-opt';
+    let optText = opt;
+    let optEmoji = '';
+    if (typeof opt === 'object' && opt !== null) {
+      optText = opt.text || opt.t || '';
+      optEmoji = opt.emoji || opt.e || '';
+    }
+    const emojiHtml = optEmoji ? `<span class="opt-emoji">${optEmoji}</span> ` : '';
+    div.innerHTML = `<span class="opt-num">${toFa(i+1)})</span>${emojiHtml}<span class="opt-txt">${optText}</span>`;
+    UI.qOpts.appendChild(div);
+  });
+
+  enemies.forEach((e, i) => {
+    drawLabel(e.label, toFa(i+1), false);
+    respawnEnemy(e);
+  });
+
+  GAME.lockedTarget = null;
+  GAME.lockProgress = 0;
+  GAME.isLocked = false;
+  GAME.roundEndTimer = 0;
+  GAME.fireCooldown = 0;
+  GAME.answerRevealed = false;
+
+  updateRewardUI();
+}
+
+function updateRewardUI(){
+  UI.reward.textContent = toFa(rewardFor(GAME.throttle));
+}
+
+function destroyEnemy(e){
+  if(!e.alive) return;
+  if(GAME.answerRevealed) return;
+
+  e.alive = false;
+  e.group.visible = false;
+  e.label.sprite.visible = false;
+
+  if(GAME.lockedTarget === e){
+    GAME.lockedTarget = null;
+    GAME.lockProgress = 0;
+    GAME.isLocked = false;
+  }
+
+  GAME.answerRevealed = true;
+
+  if(e.optionIndex === GAME.correctIndex){
+    const reward = rewardFor(GAME.throttle);
+    GAME.coins += reward;
+    UI.coins.textContent = toFa(GAME.coins);
+    toast('+ ' + toFa(reward) + ' سکه ✦ پاسخ درست!', 'good');
+    chime();
+    vibrate([30,50,30,50,80]);
+    markOption(GAME.correctIndex, 'correct');
+  } else {
+    toast('نادرست! پاسخ درست: گزینه ' + toFa(GAME.correctIndex + 1), 'bad');
+    beep(150, 0.4, 'sawtooth', 0.06);
+    beep(110, 0.5, 'square', 0.05);
+    vibrate([60,60,60]);
+    markOption(e.optionIndex, 'wrong');
+    markOption(GAME.correctIndex, 'correct');
+  }
+
+  GAME.roundEndTimer = 1.8;
+}
+
+const _ndc = new THREE.Vector3();
+function findTargetUnderCrosshair(){
+  if(GAME.answerRevealed) return null;
+  camera.updateMatrixWorld();
+  camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+  const lockRadiusPx = lockRadiusFor(GAME.throttle);
+  let best = null, bestD = Infinity;
+  for(const e of enemies){
+    if(!e.alive) continue;
+    _ndc.copy(e.group.position).project(camera);
+    if(_ndc.z > 1) continue;
+    const px = _ndc.x * innerWidth / 2;
+    const py = _ndc.y * innerHeight / 2;
+    const d = Math.hypot(px, py);
+    if(d < lockRadiusPx && d < bestD){ bestD = d; best = e; }
+  }
+  return best;
+}
+
+let dragId = null, lastX = 0, lastY = 0;
+const BASE_SENS = 0.28;
+const REF_FOV = 70;
+
+canvas.addEventListener('pointerdown', e => {
+  audioCtx();
+  if(dragId !== null) return;
+  dragId = e.pointerId;
+  lastX = e.clientX; lastY = e.clientY;
+  try{ canvas.setPointerCapture(e.pointerId); }catch(err){}
+}, { passive:true });
+
+canvas.addEventListener('pointermove', e => {
+  if(e.pointerId !== dragId) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  const fovScale = camera.fov / REF_FOV;
+  const s = BASE_SENS * fovScale;
+  player.target.x = clamp(player.target.x + dx * s, -BOUND_X, BOUND_X);
+  player.target.y = clamp(player.target.y - dy * s, -BOUND_Y, BOUND_Y);
+}, { passive:true });
+
+function endDrag(e){ if(e.pointerId === dragId) dragId = null; }
+canvas.addEventListener('pointerup', endDrag, { passive:true });
+canvas.addEventListener('pointercancel', endDrag, { passive:true });
+
+function bindHold(el, onDown, onUp){
+  el.addEventListener('pointerdown', e => {
+    e.preventDefault(); audioCtx(); onDown();
+    try{ el.setPointerCapture(e.pointerId); }catch(err){}
+  }, { passive:false });
+  const up = e => { e.preventDefault(); onUp(); };
+  el.addEventListener('pointerup', up, { passive:false });
+  el.addEventListener('pointercancel', up, { passive:false });
+  el.addEventListener('pointerleave', up, { passive:false });
+}
+
+bindHold(document.getElementById('thr-up'),
+  () => { GAME.throttleInput = 1; beep(500,0.05,'sine',0.03); },
+  () => { GAME.throttleInput = 0; });
+bindHold(document.getElementById('thr-down'),
+  () => { GAME.throttleInput = -1; beep(340,0.05,'sine',0.03); },
+  () => { GAME.throttleInput = 0; });
+
+function tryFire(){
+  audioCtx();
+  if(GAME.fireCooldown > 0) return;
+  if(GAME.answerRevealed) return;
+  if(!GAME.isLocked || !GAME.lockedTarget || !GAME.lockedTarget.alive){
+    toast('هدف قفل نشده!', 'bad');
+    beep(180, 0.18, 'square', 0.05);
+    vibrate(40);
+    return;
+  }
+  fireMissile(GAME.lockedTarget);
+  GAME.lockedTarget.label && drawLabel(GAME.lockedTarget.label, GAME.lockedTarget.label.current, false);
+  GAME.lockedTarget = null;
+  GAME.lockProgress = 0;
+  GAME.isLocked = false;
+  GAME.fireCooldown = 0.9;
+}
+
+UI.fire.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  tryFire();
+}, { passive:false });
+
+let lastT = performance.now();
+let uiTick = 0;
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - lastT) / 1000, 0.05);
+  lastT = now;
+  if(GAME.running) update(dt);
+  renderer.render(scene, camera);
+}
+
+function update(dt){
+  GAME.throttle = clamp(GAME.throttle + GAME.throttleInput * dt * 0.75, 0, 1);
+
+  const k = 1 - Math.exp(-dt * 20);
+  player.pos.x += (player.target.x - player.pos.x) * k;
+  player.pos.y += (player.target.y - player.pos.y) * k;
+
+  const velX = (player.pos.x - player.prevX) / Math.max(dt, 0.0001);
+  player.prevX = player.pos.x;
+  player.smoothVelX = lerp(player.smoothVelX, velX, Math.min(1, dt * 9));
+
+  camera.position.set(player.pos.x, player.pos.y + CAM_Y_OFFSET, 0);
+
+  if(GAME.shake > 0.001){
+    const s = GAME.shake * 3.2;
+    camera.position.x += (Math.random()-0.5) * s;
+    camera.position.y += (Math.random()-0.5) * s;
+    camera.position.z += (Math.random()-0.5) * s * 0.6;
+    GAME.shake *= Math.pow(0.012, dt);
+  } else { GAME.shake = 0; }
+
+  camera.rotation.set(
+    (player.target.y - player.pos.y) * 0.0025,
+    0,
+    -player.smoothVelX * 0.0012
+  );
+
+  const targetFov = 67 + GAME.throttle * 10;
+  if(Math.abs(camera.fov - targetFov) > 0.05){
+    camera.fov += (targetFov - camera.fov) * Math.min(1, dt * 3);
+    camera.updateProjectionMatrix();
+  }
+
+  sky.position.copy(camera.position);
+
+  const cloudSpeed = 25 + GAME.throttle * 130;
+  for(const c of clouds){
+    c.position.z += cloudSpeed * dt;
+    if(c.position.z > 160){
+      c.position.z = rand(-1500, -900);
+      c.position.x = rand(-700, 700);
+      c.position.y = rand(-190, 230);
+    }
+  }
+
+  for(const e of enemies){
+    if(e.alive){
+      updateEnemy(e, dt);
+    } else if(e.respawnTimer > 0){
+      e.respawnTimer -= dt;
+      if(e.respawnTimer <= 0){
+        respawnEnemy(e);
+      }
+    }
+  }
+
+  if(GAME.fireCooldown > 0) GAME.fireCooldown -= dt;
+
+  GAME.lockNeed = lockTimeFor();
+
+  const found = (GAME.fireCooldown > 0 || GAME.answerRevealed) ? null : findTargetUnderCrosshair();
+
+  if(found !== GAME.lockedTarget){
+    if(GAME.lockedTarget && GAME.lockedTarget.label){
+      drawLabel(GAME.lockedTarget.label, GAME.lockedTarget.label.current, false);
+    }
+    GAME.lockedTarget = found;
+    GAME.lockProgress = 0;
+    GAME.isLocked = false;
+    if(found){
+      beep(1200, 0.05, 'sine', 0.03);
+      vibrate(10);
+    }
+  }
+
+  if(GAME.lockedTarget && GAME.lockedTarget.alive){
+    GAME.lockProgress += dt;
+    if(GAME.lockProgress >= GAME.lockNeed && !GAME.isLocked){
+      GAME.isLocked = true;
+      drawLabel(GAME.lockedTarget.label, GAME.lockedTarget.label.current, true);
+      beep(1600, 0.09, 'square', 0.05);
+      setTimeout(()=>beep(2000, 0.09, 'square', 0.05), 90);
+      vibrate([15,40,15]);
+    }
+  } else {
+    GAME.isLocked = false;
+    GAME.lockProgress = 0;
+  }
+
+  for(let i = missiles.length - 1; i >= 0; i--){
+    updateMissile(missiles[i], dt);
+  }
+
+  updateParticles(dt);
+
+  if(GAME.roundEndTimer > 0){
+    GAME.roundEndTimer -= dt;
+    if(GAME.roundEndTimer <= 0){
+      newRound();
+    }
+  }
+
+  const p = GAME.lockedTarget && GAME.lockedTarget.alive
+    ? clamp(GAME.lockProgress / GAME.lockNeed, 0, 1)
+    : 0;
+  UI.ring.style.strokeDashoffset = String(RING_C * (1 - p));
+
+  if(GAME.answerRevealed){
+    UI.cross.classList.remove('locked');
+    UI.lockEl.classList.remove('locked');
+    UI.fire.classList.remove('ready');
+    UI.lockEl.textContent = 'پاسخ نمایش داده شد…';
+  } else if(GAME.isLocked){
+    UI.cross.classList.add('locked');
+    UI.lockEl.classList.add('locked');
+    UI.lockEl.textContent = 'قفل شد — شلیک کن!';
+    UI.fire.classList.add('ready');
+  } else {
+    UI.cross.classList.remove('locked');
+    UI.lockEl.classList.remove('locked');
+    UI.fire.classList.remove('ready');
+    if(GAME.lockedTarget){
+      UI.lockEl.textContent = 'در حال قفل… ' + toFa(Math.floor(p*100)) + '٪';
+    } else {
+      UI.lockEl.textContent = 'در جستجوی هدف…';
+    }
+  }
+
+  uiTick += dt;
+  if(uiTick > 0.08){
+    uiTick = 0;
+    UI.thrFill.style.height = (GAME.throttle * 100).toFixed(0) + '%';
+    UI.speed.textContent = toFa(Math.round(520 + GAME.throttle * 1720));
+    UI.reward.textContent = toFa(rewardFor(GAME.throttle));
+  }
+}
+
+function onResize(){
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+}
+addEventListener('resize', onResize);
+addEventListener('orientationchange', () => setTimeout(onResize, 250));
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('touchmove', e => {
+  if(e.touches.length > 1) e.preventDefault();
+}, { passive:false });
+document.addEventListener('dblclick', e => e.preventDefault(), { passive:false });
+
+onResize();
+newRound();
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

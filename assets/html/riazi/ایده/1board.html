@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>دفتر یادداشت - چند صفحه‌ای</title>
+<style>
+• { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { height:100%; overflow:hidden; font-family:Tahoma, sans-serif; background:#dde3ea; user-select:none; -webkit-user-select:none; }
+
+.topbar {
+position:fixed; top:8px; right:50%; transform:translateX(50%);
+display:flex; align-items:center; gap:6px;
+background:#fff; padding:6px 10px; border-radius:14px;
+box-shadow:0 4px 16px rgba(0,0,0,.12); z-index:10;
+flex-wrap:wrap; justify-content:center; max-width:96vw;
+}
+.bottombar {
+position:fixed; bottom:8px; right:50%; transform:translateX(50%);
+display:flex; align-items:center; gap:6px;
+background:#fff; padding:6px 10px; border-radius:14px;
+box-shadow:0 4px 16px rgba(0,0,0,.12); z-index:10;
+flex-wrap:wrap; justify-content:center; max-width:96vw;
+}
+.tool-btn {
+display:flex; align-items:center; gap:5px;
+border:none; background:#f1f4f8; color:#333;
+padding:8px 12px; border-radius:10px; font-size:14px;
+font-family:inherit; cursor:pointer; transition:all .15s; white-space:nowrap;
+}
+.tool-btn:hover { background:#e2e8f0; }
+.tool-btn.active { background:#4a7dff; color:#fff; box-shadow:0 2px 8px rgba(74,125,255,.4); }
+.tool-btn.danger.active { background:#ff5c5c; box-shadow:0 2px 8px rgba(255,92,92,.4); }
+.tool-btn.save { background:#22a06b; color:#fff; }
+.tool-btn.save:hover { background:#1a8a5a; }
+.divider { width:1px; height:24px; background:#dfe4ea; }
+.colors { display:flex; gap:5px; align-items:center; }
+.color-dot {
+width:22px; height:22px; border-radius:50%;
+border:2px solid transparent; cursor:pointer; transition:transform .15s;
+}
+.color-dot:hover { transform:scale(1.15); }
+.color-dot.selected { border-color:#4a7dff; box-shadow:0 0 0 2px #fff inset; }
+
+.page-info {
+background:#f1f4f8; color:#333; padding:8px 14px;
+border-radius:10px; font-size:14px; font-weight:bold;
+min-width:110px; text-align:center;
+}
+
+.canvas-wrap {
+position:fixed; inset:0;
+padding:70px 8px 70px 8px;
+display:flex; align-items:center; justify-content:center;
+}
+canvas {
+background:#fff;
+border-radius:6px;
+box-shadow:0 6px 24px rgba(0,0,0,.18);
+touch-action:none;
+cursor:crosshair;
+max-width:100%;
+max-height:100%;
+width:auto;
+height:auto;
+object-fit:contain;
+}
+
+.toast {
+position:fixed; top:70px; right:50%; transform:translateX(50%) translateY(-20px);
+background:#22a06b; color:#fff; padding:8px 20px; border-radius:20px;
+font-size:13px; opacity:0; pointer-events:none;
+transition:all .3s ease; z-index:20;
+}
+.toast.show { opacity:1; transform:translateX(50%) translateY(0); }
+
+@media (max-width:650px) {
+.tool-btn { padding:7px 9px; font-size:13px; }
+.tool-btn .label { display:none; }
+.color-dot { width:18px; height:18px; }
+.page-info { min-width:90px; padding:7px 10px; font-size:13px; }
+.canvas-wrap { padding:62px 4px 62px 4px; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+<button class="tool-btn active" id="pencilBtn" title="مداد">✏️ <span class="label">مداد</span></button>
+<button class="tool-btn danger" id="eraserBtn" title="پاک‌کن">🧽 <span class="label">پاک‌کن</span></button>
+<div class="divider"></div>
+<div class="colors" id="colors">
+<div class="color-dot selected" data-color="#1a1a1a" style="background:#1a1a1a;"></div>
+<div class="color-dot" data-color="#e53935" style="background:#e53935;"></div>
+<div class="color-dot" data-color="#1e88e5" style="background:#1e88e5;"></div>
+<div class="color-dot" data-color="#43a047" style="background:#43a047;"></div>
+<div class="color-dot" data-color="#fb8c00" style="background:#fb8c00;"></div>
+<div class="color-dot" data-color="#8e24aa" style="background:#8e24aa;"></div>
+</div>
+<div class="divider"></div>
+<button class="tool-btn" id="sizeBtn" title="اندازه مداد">🖊 <span class="label" id="sizeLabel">معمولی</span></button>
+</div>
+
+<div class="canvas-wrap">
+<canvas id="board" width="1000" height="1400"></canvas>
+</div>
+
+<div class="toast" id="toast">✔ ذخیره شد</div>
+
+<div class="bottombar">
+<button class="tool-btn" id="prevBtn" title="صفحه قبل">◀</button>
+<div class="page-info" id="pageInfo">صفحه ۱ از ۱</div>
+<button class="tool-btn" id="nextBtn" title="صفحه بعد">▶</button>
+<div class="divider"></div>
+<button class="tool-btn" id="addBtn" title="صفحه جدید">➕ <span class="label">صفحه جدید</span></button>
+<button class="tool-btn danger" id="delBtn" title="حذف صفحه">❌ <span class="label">حذف</span></button>
+<div class="divider"></div>
+<button class="tool-btn danger" id="clearBtn" title="پاک کردن این صفحه">🧹 <span class="label">پاک</span></button>
+<button class="tool-btn save" id="saveBtn" title="ذخیره">💾 <span class="label">ذخیره</span></button>
+</div>
+
+<script>
+(function () {
+const canvas = document.getElementById('board');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const STORAGE_KEY = 'my_whiteboard_pages_v1';
+
+let tool = 'pencil';
+let color = '#1a1a1a';
+let pencilWidth = 5;
+const eraserWidth = 60;
+const sizes = [
+{ w: 3, label: 'نازک' },
+{ w: 5, label: 'معمولی' },
+{ w: 9, label: 'ضخیم' },
+{ w: 15, label: 'خیلی ضخیم' }
+ ];
+let sizeIndex = 1;
+
+let pages = [''];
+let currentPage = 0;
+let drawing = false, lastX = 0, lastY = 0;
+let saveTimer = null;
+
+function initCanvas() {
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(0, 0, W, H);
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+}
+
+function loadFromStorage() {
+try {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) {
+const data = JSON.parse(raw);
+if (Array.isArray(data.pages) && data.pages.length > 0) {
+pages = data.pages;
+currentPage = Math.min(data.current || 0, pages.length - 1);
+return true;
+}
+}
+} catch (e) { console.warn('خطا در بارگذاری:', e); }
+return false;
+}
+
+function saveToStorage(showToast) {
+pages[currentPage] = canvas.toDataURL('image/png');
+try {
+localStorage.setItem(STORAGE_KEY, JSON.stringify({
+pages: pages,
+current: currentPage,
+savedAt: Date.now()
+}));
+if (showToast) showSaved();
+return true;
+} catch (e) {
+alert('حافظه پر شده! لطفاً بعضی صفحه‌ها رو حذف کنید.');
+console.error(e);
+return false;
+}
+}
+
+function showSaved() {
+const t = document.getElementById('toast');
+t.classList.add('show');
+clearTimeout(t._tid);
+t._tid = setTimeout(() => t.classList.remove('show'), 1200);
+}
+
+function displayPage(index) {
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(0, 0, W, H);
+const data = pages[index];
+if (data && data.length > 50) {
+const img = new Image();
+img.onload = () => {
+ctx.drawImage(img, 0, 0, W, H);
+};
+img.src = data;
+}
+updatePageInfo();
+}
+
+function updatePageInfo() {
+document.getElementById('pageInfo').textContent =
+'صفحه ' + toPersian(currentPage + 1) + ' از ' + toPersian(pages.length);
+}
+
+function toPersian(n) {
+return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+}
+
+function goToPage(index) {
+if (index < 0 || index >= pages.length || index === currentPage) return;
+pages[currentPage] = canvas.toDataURL('image/png');
+currentPage = index;
+displayPage(currentPage);
+saveToStorage(false);
+}
+
+function addPage() {
+pages[currentPage] = canvas.toDataURL('image/png');
+pages.push('');
+currentPage = pages.length - 1;
+displayPage(currentPage);
+saveToStorage(false);
+showSaved();
+}
+
+function deletePage() {
+if (pages.length <= 1) {
+if (confirm('این صفحه پاک شود؟')) {
+pages = [''];
+currentPage = 0;
+displayPage(0);
+saveToStorage(false);
+}
+return;
+}
+if (!confirm('صفحه ' + toPersian(currentPage + 1) + ' حذف شود؟')) return;
+pages.splice(currentPage, 1);
+if (currentPage >= pages.length) currentPage = pages.length - 1;
+displayPage(currentPage);
+saveToStorage(false);
+showSaved();
+}
+
+function clearPage() {
+if (!confirm('یادداشت‌های این صفحه پاک شوند؟')) return;
+ctx.fillStyle = '#ffffff';
+ctx.fillRect(0, 0, W, H);
+pages[currentPage] = '';
+saveToStorage(false);
+}
+
+function getPos(e) {
+const rect = canvas.getBoundingClientRect();
+const src = e.touches ? e.touches[0] : e;
+return {
+x: (src.clientX - rect.left) * (W / rect.width),
+y: (src.clientY - rect.top) * (H / rect.height)
+};
+}
+
+function applyStyle() {
+if (tool === 'eraser') {
+ctx.strokeStyle = '#ffffff';
+ctx.lineWidth = eraserWidth;
+} else {
+ctx.strokeStyle = color;
+ctx.lineWidth = pencilWidth;
+}
+}
+
+function startDraw(e) {
+e.preventDefault();
+drawing = true;
+const p = getPos(e);
+lastX = p.x; lastY = p.y;
+applyStyle();
+ctx.beginPath();
+ctx.arc(lastX, lastY, ctx.lineWidth / 2, 0, Math.PI * 2);
+ctx.fillStyle = ctx.strokeStyle;
+ctx.fill();
+}
+
+function draw(e) {
+if (!drawing) return;
+e.preventDefault();
+const p = getPos(e);
+applyStyle();
+ctx.beginPath();
+ctx.moveTo(lastX, lastY);
+ctx.lineTo(p.x, p.y);
+ctx.stroke();
+lastX = p.x; lastY = p.y;
+clearTimeout(saveTimer);
+saveTimer = setTimeout(() => saveToStorage(false), 900);
+}
+
+function stopDraw() {
+if (!drawing) return;
+drawing = false;
+ctx.closePath();
+clearTimeout(saveTimer);
+saveToStorage(false);
+}
+
+canvas.addEventListener('mousedown', startDraw);
+canvas.addEventListener('mousemove', draw);
+window.addEventListener('mouseup', stopDraw);
+canvas.addEventListener('mouseleave', stopDraw);
+canvas.addEventListener('touchstart', startDraw, { passive: false });
+canvas.addEventListener('touchmove', draw, { passive: false });
+canvas.addEventListener('touchend', stopDraw);
+canvas.addEventListener('touchcancel', stopDraw);
+
+const pencilBtn = document.getElementById('pencilBtn');
+const eraserBtn = document.getElementById('eraserBtn');
+
+pencilBtn.addEventListener('click', () => {
+tool = 'pencil';
+pencilBtn.classList.add('active');
+eraserBtn.classList.remove('active');
+canvas.style.cursor = 'crosshair';
+});
+
+eraserBtn.addEventListener('click', () => {
+tool = 'eraser';
+eraserBtn.classList.add('active');
+pencilBtn.classList.remove('active');
+canvas.style.cursor = 'cell';
+});
+
+document.getElementById('colors').addEventListener('click', (e) => {
+const dot = e.target.closest('.color-dot');
+if (!dot) return;
+color = dot.dataset.color;
+document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+dot.classList.add('selected');
+if (tool === 'eraser') {
+tool = 'pencil';
+pencilBtn.classList.add('active');
+eraserBtn.classList.remove('active');
+}
+});
+
+document.getElementById('sizeBtn').addEventListener('click', () => {
+sizeIndex = (sizeIndex + 1) % sizes.length;
+pencilWidth = sizes[sizeIndex].w;
+document.getElementById('sizeLabel').textContent = sizes[sizeIndex].label;
+});
+
+document.getElementById('prevBtn').addEventListener('click', () => goToPage(currentPage - 1));
+document.getElementById('nextBtn').addEventListener('click', () => goToPage(currentPage + 1));
+document.getElementById('addBtn').addEventListener('click', addPage);
+document.getElementById('delBtn').addEventListener('click', deletePage);
+document.getElementById('clearBtn').addEventListener('click', clearPage);
+document.getElementById('saveBtn').addEventListener('click', () => saveToStorage(true));
+
+document.body.addEventListener('touchmove', (e) => {
+if (e.target === canvas) e.preventDefault();
+}, { passive: false });
+
+window.addEventListener('beforeunload', () => saveToStorage(false));
+window.addEventListener('pagehide', () => saveToStorage(false));
+document.addEventListener('visibilitychange', () => {
+if (document.hidden) saveToStorage(false);
+});
+
+initCanvas();
+if (loadFromStorage()) {
+displayPage(currentPage);
+} else {
+updatePageInfo();
+}
+})();
+</script>
+</body>
+</html>
